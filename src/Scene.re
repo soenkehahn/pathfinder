@@ -1,18 +1,40 @@
 let cellSize = 50;
 
-type scene = {
+type position = {
   x: int,
   y: int,
 };
 
-let initial = {x: 0, y: 0};
+let modifyX = (position, f) => {...position, x: f(position.x)};
+
+let modifyY = (position, f) => {...position, y: f(position.y)};
+
+type scene = {
+  movesLeft: int,
+  position,
+};
+
+let initial = {
+  movesLeft: 5,
+  position: {
+    x: 0,
+    y: 0,
+  },
+};
+
+let modifyMovesLeft = (scene, f) => {
+  ...scene,
+  movesLeft: f(scene.movesLeft),
+};
+
+let modifyPosition = (scene, f) => {...scene, position: f(scene.position)};
 
 let draw = (context: Webapi.Canvas.Canvas2d.t, scene: scene): unit => {
   open Webapi.Canvas.Canvas2d;
   setFillStyle(context, String, "#ff0000");
   fillRect(
-    ~x=float_of_int(scene.x * cellSize),
-    ~y=float_of_int(scene.y * cellSize),
+    ~x=float_of_int(scene.position.x * cellSize),
+    ~y=float_of_int(scene.position.y * cellSize),
     ~w=float_of_int(cellSize),
     ~h=float_of_int(cellSize),
     context,
@@ -35,10 +57,17 @@ let key_of_js_key = (key: string): option(key) =>
   | _ => None
   };
 
-let handleKeyPress = (scene: scene, key: key): option(scene) =>
-  switch (key) {
-  | Up => Some({x: scene.x, y: scene.y + 1})
-  | Down => Some({x: scene.x, y: scene.y - 1})
-  | Left => Some({x: scene.x - 1, y: scene.y})
-  | Right => Some({x: scene.x + 1, y: scene.y})
+let handleKeyPress = (scene: scene, key: key): scene =>
+  if (scene.movesLeft > 0) {
+    (
+      switch (key) {
+      | Up => scene |> modifyPosition(_, modifyY(_, y => y + 1))
+      | Down => scene |> modifyPosition(_, modifyY(_, y => y - 1))
+      | Left => scene |> modifyPosition(_, modifyX(_, x => x - 1))
+      | Right => scene |> modifyPosition(_, modifyX(_, x => x + 1))
+      }
+    )
+    |> modifyMovesLeft(_, x => x - 1);
+  } else {
+    scene;
   };

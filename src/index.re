@@ -69,13 +69,7 @@ module App = {
       Webapi.Dom.KeyboardEvent.(
         if (!repeat(event)) {
           switch (key_of_js_key(key(event))) {
-          | Some(key) =>
-            setScene(scene =>
-              switch (handleKeyPress(scene, key)) {
-              | Some(newScene) => newScene
-              | None => scene
-              }
-            )
+          | Some(key) => setScene(scene => handleKeyPress(scene, key))
           | None => ()
           };
         }

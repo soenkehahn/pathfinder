@@ -2,7 +2,6 @@ open Jest;
 open Scene;
 open Expect;
 open! Expect.Operators;
-let (>>=) = Belt.Option.flatMap;
 
 describe("key_of_js_key", () => {
   let table = [
@@ -29,12 +28,23 @@ describe("handleKeyPress", () => {
   ];
   testAll(
     "moves the player in the given direction", table, ((direction, expected)) =>
-    expect(handleKeyPress(Scene.initial, direction)) == Some(expected)
+    expect(handleKeyPress(Scene.initial, direction).position) == expected
   );
 
   test("moves the player multiple times", () => {
     let scene =
-      Scene.initial |> handleKeyPress(_, Up) >>= handleKeyPress(_, Right);
-    expect(scene) == Some({x: 1, y: 1});
+      Scene.initial |> handleKeyPress(_, Up) |> handleKeyPress(_, Right);
+    expect(scene.position) == {x: 1, y: 1};
+  });
+
+  test("counts down the moves", () => {
+    let initial = Scene.initial.movesLeft;
+    let scene = Scene.initial |> handleKeyPress(_, Up);
+    expect((initial, scene.movesLeft)) == (5, 4);
+  });
+
+  test("disallows movements when movesLeft is 0 foo", () => {
+    let scene = {...Scene.initial, movesLeft: 0};
+    expect(handleKeyPress(scene, Up)) == scene;
   });
 });
