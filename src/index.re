@@ -1,14 +1,21 @@
+open Scene;
 
-let draw = (canvas: Dom.element): unit => {
-  open Webapi.Canvas.CanvasElement;
-  open Webapi.Canvas.Canvas2d;
-  let width = float_of_int(Webapi.Canvas.CanvasElement.width(canvas));
-  let height = float_of_int(Webapi.Canvas.CanvasElement.height(canvas));
-  let context = getContext2d(canvas);
+let drawGame = (canvas: Dom.element, scene: scene): unit => {
+  open Webapi.Canvas;
+  open Canvas2d;
+  let width = float_of_int(CanvasElement.width(canvas));
+  let height = float_of_int(CanvasElement.height(canvas));
+  let context = CanvasElement.getContext2d(canvas);
+  setTransform(context, ~m11=1., ~m12=0., ~m21=0., ~m22=1., ~dx=0., ~dy=0.);
+  setFillStyle(context, String, "#000000");
   fillRect(~x=0.0, ~y=0.0, ~w=width, ~h=height, context);
-  setFillStyle(context, String, "#ff0000");
-  fillRect(~x=190.0, ~y=190.0, ~w=10.0, ~h=10.0, context);
-  ();
+  translate(
+    context,
+    ~x=width /. 2. -. float_of_int(cellSize) /. 2.,
+    ~y=height /. 2. +. float_of_int(cellSize) /. 2.,
+  );
+  scale(context, ~x=1., ~y=-1.);
+  Scene.draw(context, scene);
 };
 
 let centerStyle =
@@ -26,15 +33,20 @@ let centerStyle =
     (),
   );
 
-module App = {
+module DrawScene = {
   [@react.component]
-  let make = () => {
+  let make = (~scene: scene) => {
     open React;
     let canvasElementRef: Ref.t(option(Dom.element)) = useRef(None);
-    useLayoutEffect0(() => {
-      Ref.current(canvasElementRef) |> Belt.Option.map(_, draw) |> ignore;
-      None;
-    });
+    useLayoutEffect1(
+      () => {
+        Ref.current(canvasElementRef)
+        |> Belt.Option.map(_, canvas => drawGame(canvas, scene))
+        |> ignore;
+        None;
+      },
+      [|scene|],
+    );
     <>
       <canvas
         width="800"
@@ -45,6 +57,47 @@ module App = {
         )}
       />
     </>;
+  };
+};
+
+module App = {
+  [@react.component]
+  let make = () => {
+    let (scene, setScene) = React.useState(() => {x: 0, y: 0});
+
+    let handleKeyboardEvents = (event): unit => {
+      Webapi.Dom.KeyboardEvent.(
+        if (!repeat(event)) {
+          switch (key_of_js_key(key(event))) {
+          | Some(key) =>
+            setScene(scene =>
+              switch (handleKeyPress(scene, key)) {
+              | Some(newScene) => newScene
+              | None => scene
+              }
+            )
+          | None => ()
+          };
+        }
+      );
+    };
+
+    React.useEffect0(() => {
+      Webapi.Dom.EventTarget.addKeyDownEventListener(
+        handleKeyboardEvents,
+        Webapi.Dom.Document.asEventTarget(Webapi.Dom.document),
+      );
+
+      Some(
+        () => {
+          Webapi.Dom.EventTarget.removeKeyDownEventListener(
+            handleKeyboardEvents,
+            Webapi.Dom.Document.asEventTarget(Webapi.Dom.document),
+          )
+        },
+      );
+    });
+    <DrawScene scene />;
   };
 };
 
