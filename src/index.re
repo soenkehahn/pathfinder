@@ -1,6 +1,8 @@
-open Scene;
+open Game;
+open Scene_Draw;
+open Key;
 
-let drawGame = (canvas: Dom.element, scene: scene): unit => {
+let drawGame = (canvas: Dom.element, game: game): unit => {
   open Webapi.Canvas;
   open Canvas2d;
   let width = float_of_int(CanvasElement.width(canvas));
@@ -15,7 +17,7 @@ let drawGame = (canvas: Dom.element, scene: scene): unit => {
     ~y=height /. 2. +. float_of_int(cellSize) /. 2.,
   );
   scale(context, ~x=1., ~y=-1.);
-  Scene_Draw.draw(context, scene);
+  Game.draw(context, game);
 };
 
 let centerStyle =
@@ -33,27 +35,22 @@ let centerStyle =
     (),
   );
 
-module DrawScene = {
+module DrawGame = {
   [@react.component]
-  let make = (~scene: scene) => {
+  let make = (~game: game) => {
     open React;
     let canvasElementRef: Ref.t(option(Dom.element)) = useRef(None);
     useLayoutEffect1(
       () => {
         Ref.current(canvasElementRef)
-        |> Belt.Option.map(_, canvas => drawGame(canvas, scene))
+        |> Belt.Option.map(_, canvas => drawGame(canvas, game))
         |> ignore;
         None;
       },
-      [|scene|],
+      [|game|],
     );
     <>
-      {React.string("moves left: " ++ string_of_int(scene.movesLeft))}
-      {if (is_game_over(scene)) {
-         <> <br /> {React.string("You won!")} </>;
-       } else {
-         React.null;
-       }}
+      {Game.ui(game)}
       <canvas
         width="800"
         height="600"
@@ -69,13 +66,13 @@ module DrawScene = {
 module App = {
   [@react.component]
   let make = () => {
-    let (scene, setScene) = React.useState(() => Scene.initial);
+    let (game, setGame) = React.useState(() => Game.initial);
 
     let handleKeyboardEvents = (event): unit => {
       Webapi.Dom.KeyboardEvent.(
         if (!repeat(event)) {
           switch (key_of_js_key(key(event))) {
-          | Some(key) => setScene(scene => step(scene, key))
+          | Some(key) => setGame(game => step(game, key))
           | None => ()
           };
         }
@@ -97,7 +94,7 @@ module App = {
         },
       );
     });
-    <DrawScene scene />;
+    <DrawGame game />;
   };
 };
 

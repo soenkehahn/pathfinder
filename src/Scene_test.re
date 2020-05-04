@@ -2,28 +2,13 @@ open Jest;
 open Scene;
 open Expect;
 open! Expect.Operators;
+open Key;
 
 let rec steps = (scene, keys) =>
   switch (keys) {
   | [key, ...rest] => scene |> step(_, key) |> steps(_, rest)
   | [] => scene
   };
-
-describe("key_of_js_key", () => {
-  let table = [
-    ("ArrowUp", Up),
-    ("ArrowDown", Down),
-    ("ArrowLeft", Left),
-    ("ArrowRight", Right),
-  ];
-  testAll("converts to key", table, ((js_key, key)) =>
-    expect(key_of_js_key(js_key)) === Some(key)
-  );
-
-  test("returns None for unknown keys", () =>
-    expect(key_of_js_key("unknown")) === None
-  );
-});
 
 describe("moving", () => {
   let table = [
