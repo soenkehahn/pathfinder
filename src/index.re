@@ -63,7 +63,7 @@ module DrawScene = {
 module App = {
   [@react.component]
   let make = () => {
-    let (scene, setScene) = React.useState(() => {x: 0, y: 0});
+    let (scene, setScene) = React.useState(() => Scene.initial);
 
     let handleKeyboardEvents = (event): unit => {
       Webapi.Dom.KeyboardEvent.(
