@@ -16,18 +16,7 @@ type scene = {
   goal: position,
 };
 
-let initial = {
-  movesLeft: 5,
-  player: {
-    x: 0,
-    y: 0,
-  },
-  path: [],
-  goal: {
-    x: 3,
-    y: 0,
-  },
-};
+let initial = Scene_Levels.levels |> List.hd;
 
 let modifyMovesLeft = (scene, f) => {
   ...scene,
