@@ -34,12 +34,12 @@ describe("moving", () => {
   ];
   testAll(
     "moves the player in the given direction", table, ((direction, expected)) =>
-    expect(step(Scene.initial, direction).position) == expected
+    expect(step(Scene.initial, direction).player) == expected
   );
 
   test("moves the player multiple times", () => {
     let scene = Scene.initial |> steps(_, [Up, Right]);
-    expect(scene.position) == {x: 1, y: 1};
+    expect(scene.player) == {x: 1, y: 1};
   });
 
   test("counts down the moves", () => {
@@ -63,7 +63,8 @@ describe("undo", () => {
   test("moves to the last position", () => {
     let scene =
       {
-        position: {
+        ...Scene.initial,
+        player: {
           x: 0,
           y: 0,
         },
@@ -71,7 +72,7 @@ describe("undo", () => {
         movesLeft: 4,
       }
       |> step(_, Undo);
-    expect(scene.position) == {x: 23, y: 42};
+    expect(scene.player) == {x: 23, y: 42};
   });
 
   test("increases movesLeft", () => {
@@ -93,6 +94,28 @@ describe("undo", () => {
     let scene =
       {...Scene.initial, movesLeft: 0, path: [{x: 23, y: 42}]}
       |> step(_, Undo);
-    expect(scene.position) == {x: 23, y: 42};
+    expect(scene.player) == {x: 23, y: 42};
+  });
+});
+
+describe("is_game_over", () => {
+  test("is false during the game", () =>
+    expect(is_game_over(Scene.initial)) == false
+  );
+
+  let end_scene = {
+    ...Scene.initial,
+    goal: {
+      x: 0,
+      y: 0,
+    },
+  };
+
+  test("when reaching the goal the game is won", () => {
+    expect(is_game_over(end_scene)) == true
+  });
+
+  test("when reaching the goal, no other keyboard input is accepted", () => {
+    expect(steps(end_scene, [Up, Right, Undo])) == end_scene
   });
 });

@@ -15,7 +15,7 @@ let drawGame = (canvas: Dom.element, scene: scene): unit => {
     ~y=height /. 2. +. float_of_int(cellSize) /. 2.,
   );
   scale(context, ~x=1., ~y=-1.);
-  Scene.draw(context, scene);
+  Scene_Draw.draw(context, scene);
 };
 
 let centerStyle =
@@ -48,6 +48,12 @@ module DrawScene = {
       [|scene|],
     );
     <>
+      {React.string("moves left: " ++ string_of_int(scene.movesLeft))}
+      {if (is_game_over(scene)) {
+         <> <br /> {React.string("You won!")} </>;
+       } else {
+         React.null;
+       }}
       <canvas
         width="800"
         height="600"
