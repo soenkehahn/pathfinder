@@ -12,6 +12,7 @@ let modifyY = (position, f) => {...position, y: f(position.y)};
 type scene = {
   movesLeft: int,
   position,
+  path: list(position),
 };
 
 let initial = {
@@ -20,6 +21,7 @@ let initial = {
     x: 0,
     y: 0,
   },
+  path: [],
 };
 
 let modifyMovesLeft = (scene, f) => {
@@ -28,6 +30,17 @@ let modifyMovesLeft = (scene, f) => {
 };
 
 let modifyPosition = (scene, f) => {...scene, position: f(scene.position)};
+
+let appendToPath = (scene, position) => {
+  ...scene,
+  path: [position, ...scene.path],
+};
+
+let undo = scene =>
+  switch (scene.path) {
+  | [last, ...path] => {position: last, path, movesLeft: scene.movesLeft + 1}
+  | [] => scene
+  };
 
 let draw = (context: Webapi.Canvas.Canvas2d.t, scene: scene): unit => {
   open Webapi.Canvas.Canvas2d;
@@ -46,7 +59,8 @@ type key =
   | Up
   | Down
   | Left
-  | Right;
+  | Right
+  | Undo;
 
 let key_of_js_key = (key: string): option(key) =>
   switch (key) {
@@ -54,20 +68,25 @@ let key_of_js_key = (key: string): option(key) =>
   | "ArrowDown" => Some(Down)
   | "ArrowLeft" => Some(Left)
   | "ArrowRight" => Some(Right)
+  | " " => Some(Undo)
   | _ => None
   };
 
-let handleKeyPress = (scene: scene, key: key): scene =>
+let move = (scene, f) =>
   if (scene.movesLeft > 0) {
-    (
-      switch (key) {
-      | Up => scene |> modifyPosition(_, modifyY(_, y => y + 1))
-      | Down => scene |> modifyPosition(_, modifyY(_, y => y - 1))
-      | Left => scene |> modifyPosition(_, modifyX(_, x => x - 1))
-      | Right => scene |> modifyPosition(_, modifyX(_, x => x + 1))
-      }
-    )
-    |> modifyMovesLeft(_, x => x - 1);
+    scene
+    |> modifyPosition(_, f)
+    |> modifyMovesLeft(_, x => x - 1)
+    |> appendToPath(_, scene.position);
   } else {
     scene;
+  };
+
+let step = (scene: scene, key: key): scene =>
+  switch (key) {
+  | Up => scene |> move(_, modifyY(_, y => y + 1))
+  | Down => scene |> move(_, modifyY(_, y => y - 1))
+  | Left => scene |> move(_, modifyX(_, x => x - 1))
+  | Right => scene |> move(_, modifyX(_, x => x + 1))
+  | Undo => undo(scene)
   };
