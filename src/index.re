@@ -1,5 +1,4 @@
 open Game;
-open Scene_Draw;
 open Key;
 
 let drawGame = (canvas: Dom.element, game: game): unit => {
@@ -11,11 +10,7 @@ let drawGame = (canvas: Dom.element, game: game): unit => {
   setTransform(context, ~m11=1., ~m12=0., ~m21=0., ~m22=1., ~dx=0., ~dy=0.);
   setFillStyle(context, String, "#000000");
   fillRect(~x=0.0, ~y=0.0, ~w=width, ~h=height, context);
-  translate(
-    context,
-    ~x=width /. 2. -. float_of_int(cellSize) /. 2.,
-    ~y=height /. 2. +. float_of_int(cellSize) /. 2.,
-  );
+  translate(context, ~x=width /. 2., ~y=height /. 2.);
   scale(context, ~x=1., ~y=-1.);
   Game.draw(context, game);
 };
