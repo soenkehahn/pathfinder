@@ -1,3 +1,4 @@
+open Scene_Core;
 open Scene;
 open Key;
 
@@ -16,7 +17,15 @@ let initial =
 
 let draw = (context, game) => Scene_Draw.draw(context, game.scene);
 
-let ui = game => Scene_Draw.ui(game.scene);
+let ui = game =>
+  <>
+    {Scene_Draw.ui(game.scene)}
+    {switch (is_game_over(game.scene), game.levels) {
+     | (true, []) =>
+       <> <br /> {React.string("Congratulations, you beat all levels!")} </>
+     | _ => React.null
+     }}
+  </>;
 
 let step = (game, key) =>
   switch (is_game_over(game.scene), key, game.levels) {

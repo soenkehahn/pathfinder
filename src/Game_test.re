@@ -1,5 +1,4 @@
 open Jest;
-open Scene;
 open Expect;
 open! Expect.Operators;
 open Key;

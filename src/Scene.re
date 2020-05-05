@@ -1,51 +1,17 @@
 open Key;
-
-type position = {
-  x: int,
-  y: int,
-};
-
-let modifyX = (position, f) => {...position, x: f(position.x)};
-
-let modifyY = (position, f) => {...position, y: f(position.y)};
-
-type scene = {
-  movesLeft: int,
-  player: position,
-  path: list(position),
-  goal: position,
-};
-
-let initial = Scene_Levels.levels |> List.hd;
-
-let modifyMovesLeft = (scene, f) => {
-  ...scene,
-  movesLeft: f(scene.movesLeft),
-};
-
-let modifyPlayer = (scene, f) => {...scene, player: f(scene.player)};
-
-let appendToPath = (scene, position) => {
-  ...scene,
-  path: [position, ...scene.path],
-};
+open Scene_Core;
 
 let undo = scene =>
   switch (scene.path) {
-  | [last, ...path] => {
-      ...scene,
-      player: last,
-      path,
-      movesLeft: scene.movesLeft + 1,
-    }
+  | [last, ...path] => {...scene, player: last, path, moves: scene.moves + 1}
   | [] => scene
   };
 
 let move = (scene, f) =>
-  if (scene.movesLeft > 0) {
+  if (scene.moves > 0) {
     scene
     |> modifyPlayer(_, f)
-    |> modifyMovesLeft(_, x => x - 1)
+    |> modifyMoves(_, x => x - 1)
     |> appendToPath(_, scene.player);
   } else {
     scene;
@@ -53,15 +19,28 @@ let move = (scene, f) =>
 
 let is_game_over = scene => scene.player == scene.goal;
 
+let processExtras = (scene): scene => {
+  let (activeExtras: list(extra), remainingExtras) =
+    List.partition(extra => extra.position == scene.player, scene.extras);
+  List.fold_left(
+    (scene, extra) => {...scene, moves: scene.moves + extra.extraMoves},
+    {...scene, extras: remainingExtras},
+    activeExtras,
+  );
+};
+
 let step = (scene: scene, key: key): scene =>
-  if (!is_game_over(scene)) {
-    switch (key) {
-    | Up => scene |> move(_, modifyY(_, y => y + 1))
-    | Down => scene |> move(_, modifyY(_, y => y - 1))
-    | Left => scene |> move(_, modifyX(_, x => x - 1))
-    | Right => scene |> move(_, modifyX(_, x => x + 1))
-    | Undo => undo(scene)
-    };
-  } else {
+  if (is_game_over(scene)) {
     scene;
+  } else {
+    (
+      switch (key) {
+      | Up => scene |> move(_, modifyY(_, y => y + 1))
+      | Down => scene |> move(_, modifyY(_, y => y - 1))
+      | Left => scene |> move(_, modifyX(_, x => x - 1))
+      | Right => scene |> move(_, modifyX(_, x => x + 1))
+      | Undo => undo(scene)
+      }
+    )
+    |> processExtras(_);
   };
