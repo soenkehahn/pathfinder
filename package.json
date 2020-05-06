@@ -12,6 +12,7 @@
     "testRegex": ".*_test.bs.js"
   },
   "scripts": {
-    "ci": "yarn && jest && parcel build src/index.html"
+    "ci": "yarn install && yarn test",
+    "test": "bsb -make-world && jest"
   }
 }

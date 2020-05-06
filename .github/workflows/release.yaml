@@ -1,0 +1,24 @@
+name: release
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - run: yarn ci
+      - name: bundle
+        run: |
+          PATH=./node_modules/.bin:$PATH
+          parcel build \
+            --public-url https://soenkehahn.github.io/pathfinder/ \
+            --no-source-maps \
+            src/index.html
+      - name: deploy to github-pages branch
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
