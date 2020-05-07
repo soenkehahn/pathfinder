@@ -17,5 +17,33 @@ let toReasonFile = (name): unit => {
   );
 };
 
-convertToCsv("Nine");
-toReasonFile("Nine");
+let generate = name => {
+  convertToCsv(name);
+  toReasonFile(name);
+};
+
+let levelNames =
+  Node.Fs.readdirSync("levels")
+  |> Array.to_list
+  |> List.filter(file => Js.String.endsWith(".ods", file), _)
+  |> List.map(file => Js.String.split(".", file)[0], _);
+
+Belt.List.forEach(
+  levelNames,
+  levelName => {
+    print_endline("generating level " ++ levelName ++ "...");
+    generate(levelName);
+  },
+);
+
+Node.Fs.writeFileAsUtf8Sync(
+  "src/Levels_All.re",
+  "let csvs = ["
+  ++ Js.String.concatMany(
+       Array.of_list(
+         List.map(name => "Levels_" ++ name ++ ".csv, ", levelNames),
+       ),
+       "",
+     )
+  ++ "];",
+);

@@ -1,14 +1,17 @@
 open Scene_Core;
 open Scene;
 open Key;
+open Level_Parser;
 
 type game = {
   scene,
   levels: list(scene),
 };
 
+let levels = Levels_All.csvs |> List.map(parse, _);
+
 let initial =
-  switch (Scene_Levels.levels) {
+  switch (levels) {
   | [current, ...rest] => {scene: current, levels: rest}
   | [] =>
     exception NoLevels;

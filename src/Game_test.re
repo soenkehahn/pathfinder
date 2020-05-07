@@ -15,8 +15,7 @@ describe("levels", () => {
           player: Game.initial.scene.goal,
         },
       };
-      expect(Game.step(won_game, Space).scene)
-      == List.nth(Scene_Levels.levels, 1);
+      expect(Game.step(won_game, Space).scene) == List.nth(Game.levels, 1);
     });
 
     test("pops the level from the level stack", () => {
