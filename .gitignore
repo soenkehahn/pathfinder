@@ -4,3 +4,5 @@
 /.merlin
 /dist/
 /lib/
+/levels/.~lock.*.ods#
+/levels/*.csv

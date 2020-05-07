@@ -1,6 +1,9 @@
 open Scene_Core;
 
+open Level_Parser;
+
 let levels = [
+  parse(Levels_Nine.csv),
   {
     moves: 3,
     player: {

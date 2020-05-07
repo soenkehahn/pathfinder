@@ -12,7 +12,9 @@
     "testRegex": ".*_test.bs.js"
   },
   "scripts": {
-    "ci": "yarn install && yarn test",
-    "test": "bsb -make-world && jest"
+    "ci": "yarn install && yarn test && yarn generate-levels",
+    "test": "bsb -make-world && jest",
+    "generate-levels": "bsb && node ./src/Level_Generator.bs.js && bsb",
+    "gen": "yarn generate-levels"
   }
 }
