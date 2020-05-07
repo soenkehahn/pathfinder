@@ -3,7 +3,7 @@ type key =
   | Down
   | Left
   | Right
-  | Undo;
+  | Space;
 
 let key_of_js_key = (key: string): option(key) =>
   switch (key) {
@@ -11,6 +11,6 @@ let key_of_js_key = (key: string): option(key) =>
   | "ArrowDown" => Some(Down)
   | "ArrowLeft" => Some(Left)
   | "ArrowRight" => Some(Right)
-  | " " => Some(Undo)
+  | " " => Some(Space)
   | _ => None
   };

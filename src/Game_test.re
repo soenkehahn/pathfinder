@@ -15,7 +15,7 @@ describe("levels", () => {
           player: Game.initial.scene.goal,
         },
       };
-      expect(Game.step(won_game, Undo).scene)
+      expect(Game.step(won_game, Space).scene)
       == List.nth(Scene_Levels.levels, 1);
     });
 
@@ -27,7 +27,7 @@ describe("levels", () => {
           player: Game.initial.scene.goal,
         },
       };
-      expect(length(Game.step(won_game, Undo).levels))
+      expect(length(Game.step(won_game, Space).levels))
       == length(won_game.levels)
       - 1;
     });

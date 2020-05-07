@@ -71,28 +71,28 @@ describe("undo", () => {
         path: [{x: 23, y: 42}],
         moves: 4,
       }
-      |> step(_, Undo);
+      |> step(_, Space);
     expect(scene.player) == {x: 23, y: 42};
   });
 
   test("increases movesLeft", () => {
-    let scene = scene |> steps(_, [Up, Undo]);
+    let scene = scene |> steps(_, [Up, Space]);
     expect(scene.moves) == 5;
   });
 
   test("removes the position from the path", () => {
-    let scene = scene |> steps(_, [Up, Undo]);
+    let scene = scene |> steps(_, [Up, Space]);
     expect(scene.path) == [];
   });
 
   test("on the initial scene doesn't do anything", () => {
-    let scene = scene |> step(_, Undo);
+    let scene = scene |> step(_, Space);
     expect(scene) == scene;
   });
 
   test("works when movesLeft is 0", () => {
     let scene =
-      {...scene, moves: 0, path: [{x: 23, y: 42}]} |> step(_, Undo);
+      {...scene, moves: 0, path: [{x: 23, y: 42}]} |> step(_, Space);
     expect(scene.player) == {x: 23, y: 42};
   });
 });
@@ -115,7 +115,7 @@ describe("is_game_over", () => {
   });
 
   test("when reaching the goal, no other keyboard input is accepted", () => {
-    expect(steps(end_scene, [Up, Right, Undo])) == end_scene
+    expect(steps(end_scene, [Up, Right, Space])) == end_scene
   });
 });
 

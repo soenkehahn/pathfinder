@@ -31,6 +31,6 @@ let ui = game =>
 
 let step = (game, key) =>
   switch (is_game_over(game.scene), key, game.levels) {
-  | (true, Undo, [next, ...rest]) => {scene: next, levels: rest}
+  | (true, Space, [next, ...rest]) => {scene: next, levels: rest}
   | _ => {...game, scene: step(game.scene, key)}
   };

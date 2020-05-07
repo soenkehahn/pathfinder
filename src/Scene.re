@@ -39,7 +39,7 @@ let step = (scene: scene, key: key): scene =>
       | Down => scene |> move(_, modifyY(_, y => y - 1))
       | Left => scene |> move(_, modifyX(_, x => x - 1))
       | Right => scene |> move(_, modifyX(_, x => x + 1))
-      | Undo => undo(scene)
+      | Space => undo(scene)
       }
     )
     |> processExtras(_);
