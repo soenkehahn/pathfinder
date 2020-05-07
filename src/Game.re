@@ -21,6 +21,8 @@ let ui = game =>
   <>
     {Scene_Draw.ui(game.scene)}
     {switch (is_game_over(game.scene), game.levels) {
+     | (true, [_, ..._]) =>
+       <> <br /> {React.string("Use space to get to the next level.")} </>
      | (true, []) =>
        <> <br /> {React.string("Congratulations, you beat all levels!")} </>
      | _ => React.null

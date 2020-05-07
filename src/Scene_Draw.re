@@ -70,6 +70,9 @@ let ui = scene =>
     {if (is_game_over(scene)) {
        <> <br /> {React.string("You won!")} </>;
      } else {
-       React.null;
+       <>
+         <br />
+         {React.string("Use the arrow keys to move and space to undo moves.")}
+       </>;
      }}
   </>;
