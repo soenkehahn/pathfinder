@@ -5,14 +5,27 @@ open Key;
 open List;
 open Game;
 
+describe("initial", () => {
+  open Level_Parser;
+  open Levels_All;
+
+  test("starts with the given level", () => {
+    expect(initial(~level=2, ()).scene) == parse(List.nth(csvs, 1))
+  });
+
+  test("when no level given, starts at 1", () => {
+    expect(initial().scene) == parse(Belt.List.headExn(csvs))
+  });
+});
+
 describe("levels", () => {
   describe("when the game is over", () => {
     test("it switches to the next level", () => {
       let won_game = {
-        ...Game.initial,
+        ...Game.initial(),
         scene: {
-          ...Game.initial.scene,
-          player: Game.initial.scene.goal,
+          ...Game.initial().scene,
+          player: Game.initial().scene.goal,
         },
       };
       expect(Game.step(won_game, Space).scene) == List.nth(Game.levels, 1);
@@ -20,10 +33,10 @@ describe("levels", () => {
 
     test("pops the level from the level stack", () => {
       let won_game = {
-        ...Game.initial,
+        ...Game.initial(),
         scene: {
-          ...Game.initial.scene,
-          player: Game.initial.scene.goal,
+          ...Game.initial().scene,
+          player: Game.initial().scene.goal,
         },
       };
       expect(length(Game.step(won_game, Space).levels))

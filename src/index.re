@@ -61,7 +61,11 @@ module DrawGame = {
 module App = {
   [@react.component]
   let make = () => {
-    let (game, setGame) = React.useState(() => Game.initial);
+    let url = ReasonReactRouter.useUrl();
+    let (game, setGame) =
+      React.useState(() =>
+        Game.initial(~level=?int_of_string_opt(url.hash), ())
+      );
 
     let handleKeyboardEvents = (event): unit => {
       Webapi.Dom.KeyboardEvent.(

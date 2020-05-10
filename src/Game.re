@@ -10,10 +10,10 @@ type game = {
 
 let levels = Levels_All.csvs |> List.map(parse, _);
 
-let initial =
-  switch (levels) {
-  | [current, ...rest] => {scene: current, levels: rest}
-  | [] =>
+let initial = (~level: int=1, ()) =>
+  switch (levels |> Belt.List.drop(_, level - 1)) {
+  | Some([current, ...rest]) => {scene: current, levels: rest}
+  | _ =>
     exception NoLevels;
     raise(NoLevels);
   };
