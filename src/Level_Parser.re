@@ -11,16 +11,25 @@ let filter2d =
     : list((int, int, 'a)) =>
   List.(flatten(map(filter(((_x, _y, cell)) => f(cell), _), grid)));
 
-let get_grid =
-    (cells: list(list(string))): list(list((int, int, string))) => {
-  open List;
+let parse_grid = (csv: string): list(list((int, int, string))) => {
+  let cells: list(list(string)) =
+    Js.String.(
+      split("\n", csv)
+      |> Array.to_list
+      |> List.map(row => split(",", row) |> Array.to_list, _)
+    );
   let withXs: list(list((int, string))) =
-    map(row => mapi((x, cell) => (x, cell), row), cells);
+    List.(map(row => mapi((x, cell) => (x, cell), row), cells));
   let withCoordinates: list(list((int, int, string))) =
-    mapi(
-      (rowIndex, row) =>
-        map(((x, cell)) => (x, length(withXs) - 1 - rowIndex, cell), row),
-      withXs,
+    List.(
+      mapi(
+        (rowIndex, row) =>
+          map(
+            ((x, cell)) => (x, length(withXs) - 1 - rowIndex, cell),
+            row,
+          ),
+        withXs,
+      )
     );
   let players = filter2d(cell => cell == "Player", withCoordinates);
   let player =
@@ -39,42 +48,42 @@ let parse_moves = (cell): int => {
   int_of_string(Js.String.split(" ", cell)[1]);
 };
 
-let parse = (csv: string): scene => {
-  let cells =
-    Js.String.(
-      split("\n", csv)
-      |> Array.to_list
-      |> List.map(row => split(",", row) |> Array.to_list, _)
-    );
-  let grid = get_grid(cells);
-  let goal =
-    switch (filter2d(cell => cell == "Goal", grid)) {
-    | [(x, y, _)] => {x, y}
-    | [] => raise(ParseError("no goal found"))
-    | [_, ..._] => raise(ParseError("multiple goals found"))
-    };
-  let extras =
-    filter2d(cell => Js.String.startsWith("Moves", cell), grid)
-    |> List.map(
-         ((x, y, cell)) =>
-           {
-             extraMoves: parse_moves(cell),
-             position: {
-               x,
-               y,
-             },
+let parse_goal = grid =>
+  switch (filter2d(cell => cell == "Goal", grid)) {
+  | [(x, y, _)] => {x, y}
+  | [] => raise(ParseError("no goal found"))
+  | [_, ..._] => raise(ParseError("multiple goals found"))
+  };
+
+let parse_extras = (grid): list(extra) =>
+  filter2d(cell => Js.String.startsWith("Moves", cell), grid)
+  |> List.map(
+       ((x, y, cell)) =>
+         {
+           extraMoves: parse_moves(cell),
+           position: {
+             x,
+             y,
            },
-         _,
-       );
-  let result = {
+         },
+       _,
+     );
+
+let parse_walls = (grid: list(list((int, int, string)))): list(position) =>
+  filter2d(cell => cell == "Wall", grid)
+  |> List.map(((x, y, _cell)) => {x, y});
+
+let parse = (csv: string): scene => {
+  let grid = parse_grid(csv);
+  {
     moves: 3,
     player: {
       x: 0,
       y: 0,
     },
-    goal,
+    goal: parse_goal(grid),
     path: [],
-    extras,
+    extras: parse_extras(grid),
+    walls: parse_walls(grid),
   };
-  result;
 };

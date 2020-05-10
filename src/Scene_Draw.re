@@ -28,6 +28,9 @@ let draw_extra = (context: context, extra: extra): unit => {
   draw_rect(context, "#00ffff", extra.position);
 };
 
+let draw_walls = (context, walls): unit =>
+  Belt.List.forEach(walls, wall => draw_rect(context, "#be480a", wall));
+
 let draw_path = (context, path: list(position)): unit => {
   switch (path) {
   | [] => ()
@@ -62,6 +65,7 @@ let draw = (context: context, scene: scene): unit => {
   List.map(draw_extra(context, _), scene.extras) |> ignore;
   draw_path(context, [scene.player, ...scene.path]);
   draw_player(context, scene.player);
+  draw_walls(context, scene.walls);
 };
 
 let ui = scene =>

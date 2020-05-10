@@ -59,4 +59,11 @@ describe("parse", () => {
       == [4];
     });
   });
+
+  describe("walls parsing", () => {
+    test("it adds walls to the level at the right position", () => {
+      let csv = "Player,Goal,Wall";
+      expect(parse(csv).walls) == [{x: 2, y: 0}];
+    })
+  });
 });

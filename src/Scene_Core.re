@@ -18,6 +18,7 @@ type scene = {
   path: list(position),
   goal: position,
   extras: list(extra),
+  walls: list(position),
 };
 
 let modifyMoves = (scene, f) => {...scene, moves: f(scene.moves)};

@@ -11,7 +11,7 @@ let rec steps = (scene, keys) =>
   | [] => scene
   };
 
-let scene = {
+let test_scene = {
   moves: 5,
   player: {
     x: 0,
@@ -23,6 +23,7 @@ let scene = {
     y: 0,
   },
   extras: [],
+  walls: [],
 };
 
 describe("moving", () => {
@@ -34,27 +35,27 @@ describe("moving", () => {
   ];
   testAll(
     "moves the player in the given direction", table, ((direction, expected)) =>
-    expect(step(scene, direction).player) == expected
+    expect(step(test_scene, direction).player) == expected
   );
 
   test("moves the player multiple times", () => {
-    let scene = scene |> steps(_, [Up, Right]);
+    let scene = test_scene |> steps(_, [Up, Right]);
     expect(scene.player) == {x: 1, y: 1};
   });
 
   test("counts down the moves", () => {
-    let initial = scene.moves;
-    let scene = scene |> step(_, Up);
+    let initial = test_scene.moves;
+    let scene = test_scene |> step(_, Up);
     expect((initial, scene.moves)) == (5, 4);
   });
 
   test("disallows movements when movesLeft is 0 foo", () => {
-    let scene = {...scene, moves: 0};
+    let scene = {...test_scene, moves: 0};
     expect(step(scene, Up)) == scene;
   });
 
   test("tracks path of player", () => {
-    let scene = scene |> steps(_, [Up, Right]);
+    let scene = test_scene |> steps(_, [Up, Right]);
     expect(scene.path) == [{x: 0, y: 1}, {x: 0, y: 0}];
   });
 });
@@ -63,7 +64,7 @@ describe("undo", () => {
   test("moves to the last position", () => {
     let scene =
       {
-        ...scene,
+        ...test_scene,
         player: {
           x: 0,
           y: 0,
@@ -76,34 +77,34 @@ describe("undo", () => {
   });
 
   test("increases movesLeft", () => {
-    let scene = scene |> steps(_, [Up, Space]);
+    let scene = test_scene |> steps(_, [Up, Space]);
     expect(scene.moves) == 5;
   });
 
   test("removes the position from the path", () => {
-    let scene = scene |> steps(_, [Up, Space]);
+    let scene = test_scene |> steps(_, [Up, Space]);
     expect(scene.path) == [];
   });
 
   test("on the initial scene doesn't do anything", () => {
-    let scene = scene |> step(_, Space);
+    let scene = test_scene |> step(_, Space);
     expect(scene) == scene;
   });
 
   test("works when movesLeft is 0", () => {
     let scene =
-      {...scene, moves: 0, path: [{x: 23, y: 42}]} |> step(_, Space);
+      {...test_scene, moves: 0, path: [{x: 23, y: 42}]} |> step(_, Space);
     expect(scene.player) == {x: 23, y: 42};
   });
 });
 
 describe("is_game_over", () => {
   test("is false during the game", () =>
-    expect(is_game_over(scene)) == false
+    expect(is_game_over(test_scene)) == false
   );
 
   let end_scene = {
-    ...scene,
+    ...test_scene,
     goal: {
       x: 0,
       y: 0,
@@ -121,7 +122,7 @@ describe("is_game_over", () => {
 
 describe("extra moves extra", () => {
   let scene = {
-    ...scene,
+    ...test_scene,
     extras: [{
                position: {
                  x: 1,
@@ -138,4 +139,11 @@ describe("extra moves extra", () => {
   test("removes the extra from the scene", () => {
     expect(step(scene, Right).extras) == []
   });
+});
+
+describe("walls", () => {
+  test("walls can't be passed through", () => {
+    let scene = {...test_scene, walls: [{x: (-1), y: 0}]};
+    expect(step(scene, Left)) == scene;
+  })
 });

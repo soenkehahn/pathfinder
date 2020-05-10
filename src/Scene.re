@@ -7,15 +7,17 @@ let undo = scene =>
   | [] => scene
   };
 
-let move = (scene, f) =>
-  if (scene.moves > 0) {
+let move_player = (scene, f: position => position) => {
+  let new_position = f(scene.player);
+  if (scene.moves > 0 && !List.mem(new_position, scene.walls)) {
     scene
-    |> modifyPlayer(_, f)
-    |> modifyMoves(_, x => x - 1)
+    |> modifyPlayer(_, _ => new_position)
+    |> modifyMoves(_, moves => moves - 1)
     |> appendToPath(_, scene.player);
   } else {
     scene;
   };
+};
 
 let is_game_over = scene => scene.player == scene.goal;
 
@@ -35,10 +37,10 @@ let step = (scene: scene, key: key): scene =>
   } else {
     (
       switch (key) {
-      | Up => scene |> move(_, modifyY(_, y => y + 1))
-      | Down => scene |> move(_, modifyY(_, y => y - 1))
-      | Left => scene |> move(_, modifyX(_, x => x - 1))
-      | Right => scene |> move(_, modifyX(_, x => x + 1))
+      | Up => scene |> move_player(_, modifyY(_, y => y + 1))
+      | Down => scene |> move_player(_, modifyY(_, y => y - 1))
+      | Left => scene |> move_player(_, modifyX(_, x => x - 1))
+      | Right => scene |> move_player(_, modifyX(_, x => x + 1))
       | Space => undo(scene)
       }
     )
