@@ -3,16 +3,21 @@ open Scene_Core;
 
 let undo = scene =>
   switch (scene.path) {
-  | [last, ...path] => {...scene, player: last, path, moves: scene.moves + 1}
+  | [last, ...path] => {
+      ...scene,
+      player: last,
+      path,
+      movesLeft: scene.movesLeft + 1,
+    }
   | [] => scene
   };
 
 let move_player = (scene, f: position => position) => {
   let new_position = f(scene.player);
-  if (scene.moves > 0 && !List.mem(new_position, scene.walls)) {
+  if (scene.movesLeft > 0 && !List.mem(new_position, scene.walls)) {
     scene
     |> modifyPlayer(_, _ => new_position)
-    |> modifyMoves(_, moves => moves - 1)
+    |> modifyMovesLeft(_, moves => moves - 1)
     |> appendToPath(_, scene.player);
   } else {
     scene;
@@ -21,12 +26,16 @@ let move_player = (scene, f: position => position) => {
 
 let is_game_over = scene => scene.player == scene.goal;
 
-let processExtras = (scene): scene => {
-  let (activeExtras: list(extra), remainingExtras) =
-    List.partition(extra => extra.position == scene.player, scene.extras);
+let processMovesExtras = (scene): scene => {
+  let (activeExtras: list(movesExtra), remainingExtras) =
+    List.partition(
+      extra => extra.position == scene.player,
+      scene.movesExtras,
+    );
   List.fold_left(
-    (scene, extra) => {...scene, moves: scene.moves + extra.extraMoves},
-    {...scene, extras: remainingExtras},
+    (scene, extra) =>
+      {...scene, movesLeft: scene.movesLeft + extra.extraMoves},
+    {...scene, movesExtras: remainingExtras},
     activeExtras,
   );
 };
@@ -44,5 +53,5 @@ let step = (scene: scene, key: key): scene =>
       | Space => undo(scene)
       }
     )
-    |> processExtras(_);
+    |> processMovesExtras(_);
   };

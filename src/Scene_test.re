@@ -13,19 +13,19 @@ let rec steps = (scene, keys) =>
 
 let test_scene =
     (
-      ~moves: int=3,
+      ~movesLeft: int=3,
       ~player: position={x: 0, y: 0},
       ~path: list(position)=[],
       ~goal={x: 3, y: 0},
-      ~extras=[],
+      ~movesExtras=[],
       ~walls=[],
       (),
     ) => {
-  moves,
+  movesLeft,
   player,
   path,
   goal,
-  extras,
+  movesExtras,
   walls,
 };
 
@@ -47,13 +47,13 @@ describe("moving", () => {
   });
 
   test("counts down the moves", () => {
-    let initial = test_scene(~moves=3, ()).moves;
+    let initial = test_scene(~movesLeft=3, ()).movesLeft;
     let scene = test_scene() |> step(_, Up);
-    expect((initial, scene.moves)) == (3, 2);
+    expect((initial, scene.movesLeft)) == (3, 2);
   });
 
   test("disallows movements when movesLeft is 0 foo", () => {
-    let scene = test_scene(~moves=0, ());
+    let scene = test_scene(~movesLeft=0, ());
     expect(step(scene, Up)) == scene;
   });
 
@@ -70,8 +70,8 @@ describe("undo", () => {
   });
 
   test("increases movesLeft", () => {
-    let scene = test_scene(~moves=3, ()) |> steps(_, [Up, Space]);
-    expect(scene.moves) == 3;
+    let scene = test_scene(~movesLeft=3, ()) |> steps(_, [Up, Space]);
+    expect(scene.movesLeft) == 3;
   });
 
   test("removes the position from the path", () => {
@@ -86,7 +86,8 @@ describe("undo", () => {
 
   test("works when movesLeft is 0", () => {
     let scene =
-      test_scene(~moves=0, ~path=[{x: 23, y: 42}], ()) |> step(_, Space);
+      test_scene(~movesLeft=0, ~path=[{x: 23, y: 42}], ())
+      |> step(_, Space);
     expect(scene.player) == {x: 23, y: 42};
   });
 });
@@ -107,22 +108,22 @@ describe("is_game_over", () => {
   });
 });
 
-describe("extra moves extra", () => {
+describe("moves extra", () => {
   let scene =
-    test_scene(~extras=[{
-                          position: {
-                            x: 1,
-                            y: 0,
-                          },
-                          extraMoves: 3,
-                        }], ());
+    test_scene(~movesExtras=[{
+                               position: {
+                                 x: 1,
+                                 y: 0,
+                               },
+                               extraMoves: 3,
+                             }], ());
 
   test("gives the player extra moves", () => {
-    expect(step(scene, Right).moves) == scene.moves - 1 + 3
+    expect(step(scene, Right).movesLeft) == scene.movesLeft - 1 + 3
   });
 
   test("removes the extra from the scene", () => {
-    expect(step(scene, Right).extras) == []
+    expect(step(scene, Right).movesExtras) == []
   });
 });
 

@@ -46,16 +46,18 @@ describe("parse", () => {
     });
   });
 
-  describe("extras parsing", () => {
-    test("it adds extras to the level at the right position", () => {
+  describe("moves extras parsing", () => {
+    test("it adds moves extras to the level at the right position", () => {
       let csv = "Player,Goal,Moves 4";
-      expect(parse(csv).extras |> List.map(extra => extra.position, _))
+      expect(parse(csv).movesExtras |> List.map(extra => extra.position, _))
       == [{x: 2, y: 0}];
     });
 
     test("it parses the number of moves", () => {
       let csv = "Player,Goal,Moves 4";
-      expect(parse(csv).extras |> List.map(extra => extra.extraMoves, _))
+      expect(
+        parse(csv).movesExtras |> List.map(extra => extra.extraMoves, _),
+      )
       == [4];
     });
   });

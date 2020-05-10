@@ -55,7 +55,7 @@ let parse_goal = grid =>
   | [_, ..._] => raise(ParseError("multiple goals found"))
   };
 
-let parse_extras = (grid): list(extra) =>
+let parse_moves_extras = (grid): list(movesExtra) =>
   filter2d(cell => Js.String.startsWith("Moves", cell), grid)
   |> List.map(
        ((x, y, cell)) =>
@@ -76,14 +76,14 @@ let parse_walls = (grid: list(list((int, int, string)))): list(position) =>
 let parse = (csv: string): scene => {
   let grid = parse_grid(csv);
   {
-    moves: 3,
+    movesLeft: 3,
     player: {
       x: 0,
       y: 0,
     },
     goal: parse_goal(grid),
     path: [],
-    extras: parse_extras(grid),
+    movesExtras: parse_moves_extras(grid),
     walls: parse_walls(grid),
   };
 };

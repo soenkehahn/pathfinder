@@ -24,8 +24,8 @@ let draw_goal = (context: context, goal: position): unit => {
   draw_rect(context, "#0000ff", goal);
 };
 
-let draw_extra = (context: context, extra: extra): unit => {
-  draw_rect(context, "#00ffff", extra.position);
+let draw_moves_extra = (context: context, movesExtra: movesExtra): unit => {
+  draw_rect(context, "#00ffff", movesExtra.position);
 };
 
 let draw_walls = (context, walls): unit =>
@@ -62,7 +62,7 @@ let draw_path = (context, path: list(position)): unit => {
 
 let draw = (context: context, scene: scene): unit => {
   draw_goal(context, scene.goal);
-  List.map(draw_extra(context, _), scene.extras) |> ignore;
+  List.map(draw_moves_extra(context, _), scene.movesExtras) |> ignore;
   draw_path(context, [scene.player, ...scene.path]);
   draw_player(context, scene.player);
   draw_walls(context, scene.walls);
@@ -70,7 +70,7 @@ let draw = (context: context, scene: scene): unit => {
 
 let ui = scene =>
   <>
-    {React.string("moves left: " ++ string_of_int(scene.moves))}
+    {React.string("moves left: " ++ string_of_int(scene.movesLeft))}
     {if (is_game_over(scene)) {
        <> <br /> {React.string("You won!")} </>;
      } else {

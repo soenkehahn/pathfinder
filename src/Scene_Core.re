@@ -7,21 +7,24 @@ let modifyX = (position, f) => {...position, x: f(position.x)};
 
 let modifyY = (position, f) => {...position, y: f(position.y)};
 
-type extra = {
+type movesExtra = {
   position,
   extraMoves: int,
 };
 
 type scene = {
-  moves: int,
+  movesLeft: int,
   player: position,
   path: list(position),
   goal: position,
-  extras: list(extra),
+  movesExtras: list(movesExtra),
   walls: list(position),
 };
 
-let modifyMoves = (scene, f) => {...scene, moves: f(scene.moves)};
+let modifyMovesLeft = (scene, f) => {
+  ...scene,
+  movesLeft: f(scene.movesLeft),
+};
 
 let modifyPlayer = (scene, f) => {...scene, player: f(scene.player)};
 
