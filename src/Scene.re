@@ -8,18 +8,18 @@ let undo = (scene): scene =>
   };
 
 let move_player = (scene, f: position => position) => {
-  let new_position = f(scene.player);
+  let newPlayer = f(scene.player);
   if (scene.movesLeft <= 0) {
     scene;
-  } else if (List.mem(new_position, scene.walls)) {
+  } else if (List.mem(newPlayer, scene.walls)) {
     scene;
   } else if (List.mem(
-               new_position,
+               newPlayer,
                scene.rocks |> List.map(rock => Rock.(rock.position), _),
              )) {
     Rock.(
       modifyRocks(scene, rock =>
-        if (rock.position == new_position) {
+        if (rock.position == newPlayer) {
           if (rock.structuralIntegrity == 1) {
             None;
           } else {
@@ -37,7 +37,7 @@ let move_player = (scene, f: position => position) => {
     |> setPrevious(_, scene);
   } else {
     scene
-    |> modifyPlayer(_, _ => new_position)
+    |> setPlayer(_, newPlayer)
     |> modifyMovesLeft(_, moves => moves - 1)
     |> setPrevious(_, scene);
   };

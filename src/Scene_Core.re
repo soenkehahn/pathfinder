@@ -54,7 +54,7 @@ let modifyMovesLeft = (scene, f) => {
   movesLeft: f(scene.movesLeft),
 };
 
-let modifyPlayer = (scene, f) => {...scene, player: f(scene.player)};
+let setPlayer = (scene, player) => {...scene, player};
 
 let setPrevious = (scene, previous) => {...scene, previous: Some(previous)};
 
