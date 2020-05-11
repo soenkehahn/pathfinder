@@ -79,18 +79,20 @@ let parse_rocks = grid =>
   filter2d(cell => cell == "Rock", grid)
   |> List.map(((x, y, _cell)) => Rock.initial({x, y}));
 
+let parse_hammers = grid =>
+  filter2d(cell => cell == "Hammer", grid)
+  |> List.map(((x, y, _cell)) => {x, y});
+
 let parse = (csv: string): scene => {
   let grid = parse_grid(csv);
   {
     movesLeft: 3,
-    player: {
-      x: 0,
-      y: 0,
-    },
+    player: Player.initial,
     goal: parse_goal(grid),
     previous: None,
     movesExtras: parse_moves_extras(grid),
     walls: parse_walls(grid),
     rocks: parse_rocks(grid),
+    hammers: parse_hammers(grid),
   };
 };

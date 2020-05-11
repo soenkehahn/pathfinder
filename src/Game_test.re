@@ -20,28 +20,25 @@ describe("initial", () => {
 
 describe("levels", () => {
   describe("when the game is over", () => {
-    test("it switches to the next level", () => {
-      let won_game = {
-        ...Game.initial(),
-        scene: {
-          ...Game.initial().scene,
-          player: Game.initial().scene.goal,
+    let won_game = {
+      ...Game.initial(),
+      scene: {
+        ...Game.initial().scene,
+        player: {
+          ...Scene_Core.Player.initial,
+          position: Game.initial().scene.goal,
         },
-      };
-      expect(Game.step(won_game, Space).scene) == List.nth(Game.levels, 1);
+      },
+    };
+
+    test("it switches to the next level", () => {
+      expect(Game.step(won_game, Space).scene) == List.nth(Game.levels, 1)
     });
 
     test("pops the level from the level stack", () => {
-      let won_game = {
-        ...Game.initial(),
-        scene: {
-          ...Game.initial().scene,
-          player: Game.initial().scene.goal,
-        },
-      };
       expect(length(Game.step(won_game, Space).levels))
       == length(won_game.levels)
-      - 1;
+      - 1
     });
   })
 });

@@ -14,21 +14,27 @@ let rec steps = (scene, keys) =>
 let test_scene =
     (
       ~movesLeft: int=3,
-      ~player: position={x: 0, y: 0},
+      ~playerPosition: position=Player.initial.position,
+      ~hasHammer: bool=Player.initial.hasHammer,
       ~previous: option(scene)=None,
       ~goal={x: 3, y: 0},
       ~movesExtras=[],
       ~walls=[],
       ~rocks=[],
+      ~hammers=[],
       (),
     ) => {
   movesLeft,
-  player,
+  player: {
+    position: playerPosition,
+    hasHammer,
+  },
   previous,
   goal,
   movesExtras,
   walls,
   rocks,
+  hammers,
 };
 
 describe("moving", () => {
@@ -40,12 +46,12 @@ describe("moving", () => {
   ];
   testAll(
     "moves the player in the given direction", table, ((direction, expected)) =>
-    expect(step(test_scene(), direction).player) == expected
+    expect(step(test_scene(), direction).player.position) == expected
   );
 
   test("moves the player multiple times", () => {
     let scene = test_scene() |> steps(_, [Up, Right]);
-    expect(scene.player) == {x: 1, y: 1};
+    expect(scene.player.position) == {x: 1, y: 1};
   });
 
   test("counts down the moves", () => {
@@ -69,11 +75,11 @@ describe("undo", () => {
   test("moves to the last position", () => {
     let scene =
       test_scene(
-        ~previous=Some(test_scene(~player={x: 23, y: 42}, ())),
+        ~previous=Some(test_scene(~playerPosition={x: 23, y: 42}, ())),
         (),
       )
       |> step(_, Space);
-    expect(scene.player) == {x: 23, y: 42};
+    expect(scene.player.position) == {x: 23, y: 42};
   });
 
   test("increases movesLeft", () => {
@@ -95,11 +101,11 @@ describe("undo", () => {
     let scene =
       test_scene(
         ~movesLeft=0,
-        ~previous=Some(test_scene(~player={x: 23, y: 42}, ())),
+        ~previous=Some(test_scene(~playerPosition={x: 23, y: 42}, ())),
         (),
       )
       |> step(_, Space);
-    expect(scene.player) == {x: 23, y: 42};
+    expect(scene.player.position) == {x: 23, y: 42};
   });
 });
 
@@ -108,7 +114,8 @@ describe("is_game_over", () => {
     expect(is_game_over(test_scene())) == false
   );
 
-  let end_scene = test_scene(~player={x: 1, y: 2}, ~goal={x: 1, y: 2}, ());
+  let end_scene =
+    test_scene(~playerPosition={x: 1, y: 2}, ~goal={x: 1, y: 2}, ());
 
   test("when reaching the goal the game is won", () => {
     expect(is_game_over(end_scene)) == true
@@ -175,7 +182,11 @@ describe("moves extra", () => {
 describe("walls", () => {
   test("walls can't be passed through", () => {
     let scene =
-      test_scene(~player={x: 0, y: 0}, ~walls=[{x: (-1), y: 0}], ());
+      test_scene(
+        ~playerPosition={x: 0, y: 0},
+        ~walls=[{x: (-1), y: 0}],
+        (),
+      );
     expect(step(scene, Left)) == scene;
   })
 });
@@ -185,7 +196,7 @@ describe("rocks", () => {
 
   test("rocks can't be passed through on the first attempt", () => {
     let scene = test_scene(~rocks=[initial({x: 1, y: 0})], ());
-    expect(step(scene, Right).player) == {x: 0, y: 0};
+    expect(step(scene, Right).player.position) == {x: 0, y: 0};
   });
 
   test("rocks can be destroyed with three moves", () => {
@@ -203,7 +214,9 @@ describe("rocks", () => {
   test("destroying rocks can happen in non-consecutive moves", () => {
     let scene =
       test_scene(~movesLeft=6, ~rocks=[initial({x: 1, y: 0})], ());
-    expect(steps(scene, [Right, Up, Down, Right, Right, Right]).player)
+    expect(
+      steps(scene, [Right, Up, Down, Right, Right, Right]).player.position,
+    )
     == {x: 1, y: 0};
   });
 
@@ -215,5 +228,34 @@ describe("rocks", () => {
       |> (rock => rock.structuralIntegrity),
     )
     == 3;
+  });
+});
+
+describe("hammer extra", () => {
+  test("get removed from the scene when passed through", () => {
+    let scene = test_scene(~hammers=[{x: 1, y: 0}], ());
+    expect(step(scene, Right).hammers) == [];
+  });
+
+  test("add the hammer extra to the player", () => {
+    let scene = test_scene(~hammers=[{x: 1, y: 0}], ());
+    expect((scene.player.hasHammer, step(scene, Right).player.hasHammer))
+    == (false, true);
+  });
+
+  test("allow to destroy walls with one move", () => {
+    let scene =
+      test_scene(~hasHammer=true, ~rocks=[Rock.initial({x: 1, y: 0})], ());
+    expect(step(scene, Right).rocks) == [];
+  });
+
+  test("undoing doesn't put hammers back into the scene", () => {
+    let scene = test_scene(~hammers=[{x: 1, y: 0}], ());
+    expect(steps(scene, [Right, Space]).hammers) == [];
+  });
+
+  test("undoing doesn't remove the hammer extra from the player", () => {
+    let scene = test_scene(~hammers=[{x: 1, y: 0}], ());
+    expect(steps(scene, [Right, Space]).player.hasHammer) == true;
   });
 });

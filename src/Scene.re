@@ -8,19 +8,19 @@ let undo = (scene): scene =>
   };
 
 let move_player = (scene, f: position => position) => {
-  let newPlayer = f(scene.player);
+  let newPlayerPosition = f(scene.player.position);
   if (scene.movesLeft <= 0) {
     scene;
-  } else if (List.mem(newPlayer, scene.walls)) {
+  } else if (List.mem(newPlayerPosition, scene.walls)) {
     scene;
   } else if (List.mem(
-               newPlayer,
+               newPlayerPosition,
                scene.rocks |> List.map(rock => Rock.(rock.position), _),
              )) {
     Rock.(
       modifyRocks(scene, rock =>
-        if (rock.position == newPlayer) {
-          if (rock.structuralIntegrity == 1) {
+        if (rock.position == newPlayerPosition) {
+          if (rock.structuralIntegrity == 1 || scene.player.hasHammer) {
             None;
           } else {
             Some({
@@ -37,19 +37,19 @@ let move_player = (scene, f: position => position) => {
     |> setPrevious(_, scene);
   } else {
     scene
-    |> setPlayer(_, newPlayer)
+    |> modifyPlayer(_, player => {...player, position: newPlayerPosition})
     |> modifyMovesLeft(_, moves => moves - 1)
     |> setPrevious(_, scene);
   };
 };
 
-let is_game_over = scene => scene.player == scene.goal;
+let is_game_over = scene => scene.player.position == scene.goal;
 
 let processMovesExtras = (scene): scene => {
   open MovesExtra;
   let (activeExtras: list(t), remainingExtras) =
     List.partition(
-      extra => extra.position == scene.player,
+      extra => extra.position == scene.player.position,
       scene.movesExtras,
     );
   let extraMoves =
@@ -65,6 +65,24 @@ let processMovesExtras = (scene): scene => {
   );
 };
 
+let processHammers = scene => {
+  let (activeHammers, remainingHammers) =
+    List.partition(hammer => hammer == scene.player.position, scene.hammers);
+  let hasHammer = activeHammers->List.length > 0;
+  let scene = {...scene, hammers: remainingHammers};
+  if (hasHammer) {
+    scene->mapAllScenes(scene =>
+      {...scene, hammers: remainingHammers}
+      ->modifyPlayer(player => {...player, hasHammer: true})
+    );
+  } else {
+    scene;
+  };
+};
+
+let processExtras = (scene: scene): scene =>
+  scene->processMovesExtras->processHammers;
+
 let step = (scene: scene, key: key): scene =>
   if (is_game_over(scene)) {
     scene;
@@ -78,5 +96,5 @@ let step = (scene: scene, key: key): scene =>
       | Space => undo(scene)
       }
     )
-    |> processMovesExtras(_);
+    |> processExtras(_);
   };

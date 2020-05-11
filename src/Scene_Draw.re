@@ -80,13 +80,17 @@ let draw_rocks = (context, rocks: list(Rock.t)): unit =>
     },
   );
 
+let draw_hammers = (context, hammers): unit =>
+  Belt.List.forEach(hammers, hammer => draw_rect(context, "#ffbf00", hammer));
+
 let draw = (context: context, scene: scene): unit => {
   draw_goal(context, scene.goal);
   List.map(draw_moves_extra(context, _), scene.movesExtras) |> ignore;
   draw_path(context, getPath(scene));
-  draw_player(context, scene.player);
+  draw_player(context, scene.player.position);
   draw_walls(context, scene.walls);
   draw_rocks(context, scene.rocks);
+  draw_hammers(context, scene.hammers);
 };
 
 let ui = scene =>

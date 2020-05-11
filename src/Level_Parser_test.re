@@ -8,7 +8,7 @@ describe("parse", () => {
   describe("player parsing", () => {
     test("it parses the player's position", () => {
       let csv = "Player,Goal";
-      expect(parse(csv).player) == {x: 0, y: 0};
+      expect(parse(csv).player.position) == {x: 0, y: 0};
     });
 
     testAll(
@@ -20,7 +20,7 @@ describe("parse", () => {
         "Goal\nEmpty\nPlayer",
       ],
       csv =>
-      expect(parse(csv).player) == {x: 0, y: 0}
+      expect(parse(csv).player.position) == {x: 0, y: 0}
     );
   });
 
@@ -82,6 +82,13 @@ describe("parse", () => {
             },
             structuralIntegrity: 3,
           }];
+    })
+  });
+
+  describe("hammer parsing", () => {
+    test("it adds hammers to the level at the right position", () => {
+      let csv = "Player,Goal,Hammer";
+      expect(parse(csv).hammers) == [{x: 2, y: 0}];
     })
   });
 });

@@ -7,6 +7,21 @@ let modifyX = (position, f) => {...position, x: f(position.x)};
 
 let modifyY = (position, f) => {...position, y: f(position.y)};
 
+module Player = {
+  type t = {
+    position,
+    hasHammer: bool,
+  };
+
+  let initial: t = {
+    position: {
+      x: 0,
+      y: 0,
+    },
+    hasHammer: false,
+  };
+};
+
 module MovesExtra = {
   type t = {
     position,
@@ -28,12 +43,13 @@ module Rock = {
 
 type scene = {
   movesLeft: int,
-  player: position,
+  player: Player.t,
   previous: option(scene),
   goal: position,
   movesExtras: list(MovesExtra.t),
   walls: list(position),
   rocks: list(Rock.t),
+  hammers: list(position),
 };
 
 let rec mapAllScenes = (scene: scene, f: scene => scene): scene =>
@@ -44,7 +60,7 @@ let rec mapAllScenes = (scene: scene, f: scene => scene): scene =>
   });
 
 let rec getPath = (scene): list(position) => {
-  let head = scene.player;
+  let head = scene.player.position;
   let rest = Belt.Option.mapWithDefault(scene.previous, [], getPath);
   [head, ...rest];
 };
@@ -54,7 +70,7 @@ let modifyMovesLeft = (scene, f) => {
   movesLeft: f(scene.movesLeft),
 };
 
-let setPlayer = (scene, player) => {...scene, player};
+let modifyPlayer = (scene, f) => {...scene, player: f(scene.player)};
 
 let setPrevious = (scene, previous) => {...scene, previous: Some(previous)};
 
