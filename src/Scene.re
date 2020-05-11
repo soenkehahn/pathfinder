@@ -1,42 +1,67 @@
 open Key;
 open Scene_Core;
 
-let undo = scene =>
-  switch (scene.path) {
-  | [last, ...path] => {
-      ...scene,
-      player: last,
-      path,
-      movesLeft: scene.movesLeft + 1,
-    }
-  | [] => scene
+let undo = (scene): scene =>
+  switch (scene.previous) {
+  | Some(previous) => previous
+  | None => scene
   };
 
 let move_player = (scene, f: position => position) => {
   let new_position = f(scene.player);
-  if (scene.movesLeft > 0 && !List.mem(new_position, scene.walls)) {
+  if (scene.movesLeft <= 0) {
+    scene;
+  } else if (List.mem(new_position, scene.walls)) {
+    scene;
+  } else if (List.mem(
+               new_position,
+               scene.rocks |> List.map(rock => Rock.(rock.position), _),
+             )) {
+    Rock.(
+      modifyRocks(scene, rock =>
+        if (rock.position == new_position) {
+          if (rock.structuralIntegrity == 1) {
+            None;
+          } else {
+            Some({
+              ...rock,
+              structuralIntegrity: rock.structuralIntegrity - 1,
+            });
+          };
+        } else {
+          Some(rock);
+        }
+      )
+    )
+    |> modifyMovesLeft(_, moves => moves - 1)
+    |> setPrevious(_, scene);
+  } else {
     scene
     |> modifyPlayer(_, _ => new_position)
     |> modifyMovesLeft(_, moves => moves - 1)
-    |> appendToPath(_, scene.player);
-  } else {
-    scene;
+    |> setPrevious(_, scene);
   };
 };
 
 let is_game_over = scene => scene.player == scene.goal;
 
 let processMovesExtras = (scene): scene => {
-  let (activeExtras: list(movesExtra), remainingExtras) =
+  open MovesExtra;
+  let (activeExtras: list(t), remainingExtras) =
     List.partition(
       extra => extra.position == scene.player,
       scene.movesExtras,
     );
-  List.fold_left(
-    (scene, extra) =>
-      {...scene, movesLeft: scene.movesLeft + extra.extraMoves},
-    {...scene, movesExtras: remainingExtras},
-    activeExtras,
+  let extraMoves =
+    activeExtras
+    |> List.map(extra => extra.extraMoves, _)
+    |> List.fold_left((+), 0, _);
+  mapAllScenes(scene, scene =>
+    {
+      ...scene,
+      movesLeft: scene.movesLeft + extraMoves,
+      movesExtras: remainingExtras,
+    }
   );
 };
 

@@ -55,23 +55,29 @@ let parse_goal = grid =>
   | [_, ..._] => raise(ParseError("multiple goals found"))
   };
 
-let parse_moves_extras = (grid): list(movesExtra) =>
-  filter2d(cell => Js.String.startsWith("Moves", cell), grid)
-  |> List.map(
-       ((x, y, cell)) =>
-         {
-           extraMoves: parse_moves(cell),
-           position: {
-             x,
-             y,
+let parse_moves_extras = (grid): list(MovesExtra.t) =>
+  MovesExtra.(
+    filter2d(cell => Js.String.startsWith("Moves", cell), grid)
+    |> List.map(
+         ((x, y, cell)) =>
+           {
+             extraMoves: parse_moves(cell),
+             position: {
+               x,
+               y,
+             },
            },
-         },
-       _,
-     );
+         _,
+       )
+  );
 
 let parse_walls = (grid: list(list((int, int, string)))): list(position) =>
   filter2d(cell => cell == "Wall", grid)
   |> List.map(((x, y, _cell)) => {x, y});
+
+let parse_rocks = grid =>
+  filter2d(cell => cell == "Rock", grid)
+  |> List.map(((x, y, _cell)) => Rock.initial({x, y}));
 
 let parse = (csv: string): scene => {
   let grid = parse_grid(csv);
@@ -82,8 +88,9 @@ let parse = (csv: string): scene => {
       y: 0,
     },
     goal: parse_goal(grid),
-    path: [],
+    previous: None,
     movesExtras: parse_moves_extras(grid),
     walls: parse_walls(grid),
+    rocks: parse_rocks(grid),
   };
 };

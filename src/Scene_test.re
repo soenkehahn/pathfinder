@@ -15,18 +15,20 @@ let test_scene =
     (
       ~movesLeft: int=3,
       ~player: position={x: 0, y: 0},
-      ~path: list(position)=[],
+      ~previous: option(scene)=None,
       ~goal={x: 3, y: 0},
       ~movesExtras=[],
       ~walls=[],
+      ~rocks=[],
       (),
     ) => {
   movesLeft,
   player,
-  path,
+  previous,
   goal,
   movesExtras,
   walls,
+  rocks,
 };
 
 describe("moving", () => {
@@ -59,13 +61,18 @@ describe("moving", () => {
 
   test("tracks path of player", () => {
     let scene = test_scene() |> steps(_, [Up, Right]);
-    expect(scene.path) == [{x: 0, y: 1}, {x: 0, y: 0}];
+    expect(getPath(scene)) == [{x: 1, y: 1}, {x: 0, y: 1}, {x: 0, y: 0}];
   });
 });
 
 describe("undo", () => {
   test("moves to the last position", () => {
-    let scene = test_scene(~path=[{x: 23, y: 42}], ()) |> step(_, Space);
+    let scene =
+      test_scene(
+        ~previous=Some(test_scene(~player={x: 23, y: 42}, ())),
+        (),
+      )
+      |> step(_, Space);
     expect(scene.player) == {x: 23, y: 42};
   });
 
@@ -74,9 +81,9 @@ describe("undo", () => {
     expect(scene.movesLeft) == 3;
   });
 
-  test("removes the position from the path", () => {
+  test("resets the history", () => {
     let scene = test_scene() |> steps(_, [Up, Space]);
-    expect(scene.path) == [];
+    expect(scene.previous) == None;
   });
 
   test("on the initial scene doesn't do anything", () => {
@@ -86,7 +93,11 @@ describe("undo", () => {
 
   test("works when movesLeft is 0", () => {
     let scene =
-      test_scene(~movesLeft=0, ~path=[{x: 23, y: 42}], ())
+      test_scene(
+        ~movesLeft=0,
+        ~previous=Some(test_scene(~player={x: 23, y: 42}, ())),
+        (),
+      )
       |> step(_, Space);
     expect(scene.player) == {x: 23, y: 42};
   });
@@ -110,13 +121,17 @@ describe("is_game_over", () => {
 
 describe("moves extra", () => {
   let scene =
-    test_scene(~movesExtras=[{
-                               position: {
-                                 x: 1,
-                                 y: 0,
-                               },
-                               extraMoves: 3,
-                             }], ());
+    test_scene(
+      ~movesLeft=3,
+      ~movesExtras=[{
+                      position: {
+                        x: 1,
+                        y: 0,
+                      },
+                      extraMoves: 3,
+                    }],
+      (),
+    );
 
   test("gives the player extra moves", () => {
     expect(step(scene, Right).movesLeft) == scene.movesLeft - 1 + 3
@@ -124,6 +139,36 @@ describe("moves extra", () => {
 
   test("removes the extra from the scene", () => {
     expect(step(scene, Right).movesExtras) == []
+  });
+
+  test("undo doesn't bring consumed extras back", () => {
+    expect(steps(scene, [Right, Space]).movesExtras) == []
+  });
+
+  test("undo doesn't remove added moves", () => {
+    expect(steps(scene, [Right, Space]).movesLeft) == 6
+  });
+
+  describe("undoing twice", () => {
+    let scene =
+      test_scene(
+        ~movesLeft=3,
+        ~movesExtras=[{
+                        position: {
+                          x: 2,
+                          y: 0,
+                        },
+                        extraMoves: 3,
+                      }],
+        (),
+      );
+    test("undoing twice doesn't bring consumed extras back", () => {
+      expect(steps(scene, [Right, Right, Space, Space]).movesExtras) == []
+    });
+
+    test("undoing twice doesn't remove added moves", () => {
+      expect(steps(scene, [Right, Right, Space, Space]).movesLeft) == 6
+    });
   });
 });
 
@@ -133,4 +178,42 @@ describe("walls", () => {
       test_scene(~player={x: 0, y: 0}, ~walls=[{x: (-1), y: 0}], ());
     expect(step(scene, Left)) == scene;
   })
+});
+
+describe("rocks", () => {
+  open Rock;
+
+  test("rocks can't be passed through on the first attempt", () => {
+    let scene = test_scene(~rocks=[initial({x: 1, y: 0})], ());
+    expect(step(scene, Right).player) == {x: 0, y: 0};
+  });
+
+  test("rocks can be destroyed with three moves", () => {
+    let scene =
+      test_scene(~movesLeft=4, ~rocks=[initial({x: 1, y: 0})], ());
+    expect(steps(scene, [Right, Right, Right]).rocks) == [];
+  });
+
+  test("destroying rocks costs moves", () => {
+    let scene =
+      test_scene(~movesLeft=5, ~rocks=[initial({x: 1, y: 0})], ());
+    expect(steps(scene, [Right, Right, Right]).movesLeft) == 2;
+  });
+
+  test("destroying rocks can happen in non-consecutive moves", () => {
+    let scene =
+      test_scene(~movesLeft=6, ~rocks=[initial({x: 1, y: 0})], ());
+    expect(steps(scene, [Right, Up, Down, Right, Right, Right]).player)
+    == {x: 1, y: 0};
+  });
+
+  test("undo will undo damage to rocks", () => {
+    let scene = test_scene(~rocks=[initial({x: 1, y: 0})], ());
+    expect(
+      steps(scene, [Right, Space]).rocks
+      |> Belt.List.headExn
+      |> (rock => rock.structuralIntegrity),
+    )
+    == 3;
+  });
 });

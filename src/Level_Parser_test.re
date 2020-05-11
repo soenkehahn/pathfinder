@@ -47,6 +47,8 @@ describe("parse", () => {
   });
 
   describe("moves extras parsing", () => {
+    open MovesExtra;
+
     test("it adds moves extras to the level at the right position", () => {
       let csv = "Player,Goal,Moves 4";
       expect(parse(csv).movesExtras |> List.map(extra => extra.position, _))
@@ -66,6 +68,20 @@ describe("parse", () => {
     test("it adds walls to the level at the right position", () => {
       let csv = "Player,Goal,Wall";
       expect(parse(csv).walls) == [{x: 2, y: 0}];
+    })
+  });
+
+  describe("rocks parsing", () => {
+    test("it adds rocks to the level at the right position", () => {
+      let csv = "Player,Goal,Rock";
+      expect(parse(csv).rocks)
+      == [{
+            position: {
+              x: 2,
+              y: 0,
+            },
+            structuralIntegrity: 3,
+          }];
     })
   });
 });

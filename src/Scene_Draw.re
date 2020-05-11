@@ -5,32 +5,6 @@ type context = t;
 
 let cellSize = 50;
 
-let draw_rect = (context, color, position) => {
-  setFillStyle(context, String, color);
-  fillRect(
-    ~x=float_of_int(position.x * cellSize) -. float_of_int(cellSize) /. 2.,
-    ~y=float_of_int(position.y * cellSize) -. float_of_int(cellSize) /. 2.,
-    ~w=float_of_int(cellSize),
-    ~h=float_of_int(cellSize),
-    context,
-  );
-};
-
-let draw_player = (context: context, player: position): unit => {
-  draw_rect(context, "#ff0000", player);
-};
-
-let draw_goal = (context: context, goal: position): unit => {
-  draw_rect(context, "#0000ff", goal);
-};
-
-let draw_moves_extra = (context: context, movesExtra: movesExtra): unit => {
-  draw_rect(context, "#00ffff", movesExtra.position);
-};
-
-let draw_walls = (context, walls): unit =>
-  Belt.List.forEach(walls, wall => draw_rect(context, "#be480a", wall));
-
 let draw_path = (context, path: list(position)): unit => {
   switch (path) {
   | [] => ()
@@ -60,12 +34,59 @@ let draw_path = (context, path: list(position)): unit => {
   };
 };
 
+let draw_rect = (context, color, position) => {
+  setFillStyle(context, String, color);
+  fillRect(
+    ~x=float_of_int(position.x * cellSize) -. float_of_int(cellSize) /. 2.,
+    ~y=float_of_int(position.y * cellSize) -. float_of_int(cellSize) /. 2.,
+    ~w=float_of_int(cellSize),
+    ~h=float_of_int(cellSize),
+    context,
+  );
+};
+
+let draw_player = (context: context, player: position): unit => {
+  draw_rect(context, "#ff0000", player);
+};
+
+let draw_goal = (context: context, goal: position): unit => {
+  draw_rect(context, "#0000ff", goal);
+};
+
+let draw_moves_extra = (context: context, movesExtra: MovesExtra.t): unit => {
+  draw_rect(context, "#00ffff", movesExtra.position);
+};
+
+let draw_walls = (context, walls): unit =>
+  Belt.List.forEach(walls, wall => draw_rect(context, "#be480a", wall));
+
+let draw_rocks = (context, rocks: list(Rock.t)): unit =>
+  Belt.List.forEach(
+    rocks,
+    rock => {
+      setFillStyle(context, String, "#444444");
+      let position = rock.position;
+      fillRect(
+        ~x=
+          float_of_int(position.x * cellSize) -. float_of_int(cellSize) /. 2.,
+        ~y=
+          float_of_int(position.y * cellSize) -. float_of_int(cellSize) /. 2.,
+        ~w=float_of_int(cellSize),
+        ~h=
+          float_of_int(cellSize)
+          *. (float_of_int(rock.structuralIntegrity) /. 3.),
+        context,
+      );
+    },
+  );
+
 let draw = (context: context, scene: scene): unit => {
   draw_goal(context, scene.goal);
   List.map(draw_moves_extra(context, _), scene.movesExtras) |> ignore;
-  draw_path(context, [scene.player, ...scene.path]);
+  draw_path(context, getPath(scene));
   draw_player(context, scene.player);
   draw_walls(context, scene.walls);
+  draw_rocks(context, scene.rocks);
 };
 
 let ui = scene =>
