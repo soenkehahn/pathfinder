@@ -5,9 +5,9 @@ Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Em
 Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty
 Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty
 Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty
-Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty
-Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Goal,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty
-Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Rock,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty
+Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Rock,Rock,Rock,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty
+Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Rock,Goal,Rock,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty
+Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Rock,Rock,Rock,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty
 Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Player,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty
 Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty
 Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty
