@@ -7,6 +7,12 @@ let modifyX = (position, f) => {...position, x: f(position.x)};
 
 let modifyY = (position, f) => {...position, y: f(position.y)};
 
+module Player = {
+  type t = position;
+
+  let initial: t = {x: 0, y: 0};
+};
+
 module MovesExtra = {
   type t = {
     position,
@@ -26,27 +32,30 @@ module Rock = {
   };
 };
 
-type scene = {
-  movesLeft: int,
-  player: position,
-  previous: option(scene),
-  goal: position,
-  movesExtras: list(MovesExtra.t),
-  walls: list(position),
+type revertible = {
+  player: Player.t,
   rocks: list(Rock.t),
 };
 
-let rec mapAllScenes = (scene: scene, f: scene => scene): scene =>
-  f({
-    ...scene,
-    previous:
-      Belt.Option.map(scene.previous, scene => mapAllScenes(scene, f)),
-  });
+let modifyPlayer = (revertable, f) => {
+  ...revertable,
+  player: f(revertable.player),
+};
 
-let rec getPath = (scene): list(position) => {
-  let head = scene.player;
-  let rest = Belt.Option.mapWithDefault(scene.previous, [], getPath);
-  [head, ...rest];
+let modifyRocks =
+    (revertable: revertible, f: Rock.t => option(Rock.t)): revertible => {
+  {...revertable, rocks: Belt.List.keepMap(revertable.rocks, f)};
+};
+
+type scene = {
+  revertible,
+  history: list(revertible),
+  movesLeft: int,
+  hasHammer: bool,
+  goal: position,
+  movesExtras: list(MovesExtra.t),
+  walls: list(position),
+  hammers: list(position),
 };
 
 let modifyMovesLeft = (scene, f) => {
@@ -54,10 +63,13 @@ let modifyMovesLeft = (scene, f) => {
   movesLeft: f(scene.movesLeft),
 };
 
-let setPlayer = (scene, player) => {...scene, player};
+let pushHistory = (scene: scene, previous) => {
+  ...scene,
+  history: [previous, ...scene.history],
+};
 
-let setPrevious = (scene, previous) => {...scene, previous: Some(previous)};
-
-let modifyRocks = (scene: scene, f: Rock.t => option(Rock.t)): scene => {
-  {...scene, rocks: Belt.List.keepMap(scene.rocks, f)};
+let getPath = (scene: scene): list(position) => {
+  let head = scene.revertible.player;
+  let rest = Belt.List.map(scene.history, revertable => revertable.player);
+  [head, ...rest];
 };

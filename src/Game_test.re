@@ -4,6 +4,8 @@ open! Expect.Operators;
 open Key;
 open List;
 open Game;
+open Scene_Core;
+open Test_Utils;
 
 describe("initial", () => {
   open Level_Parser;
@@ -20,28 +22,20 @@ describe("initial", () => {
 
 describe("levels", () => {
   describe("when the game is over", () => {
+    let won_game = {
+      ...Game.initial(),
+      scene:
+        test_scene(~playerPosition={x: 3, y: 0}, ~goal={x: 3, y: 0}, ()),
+    };
+
     test("it switches to the next level", () => {
-      let won_game = {
-        ...Game.initial(),
-        scene: {
-          ...Game.initial().scene,
-          player: Game.initial().scene.goal,
-        },
-      };
-      expect(Game.step(won_game, Space).scene) == List.nth(Game.levels, 1);
+      expect(Game.step(won_game, Space).scene) == List.nth(Game.levels, 1)
     });
 
     test("pops the level from the level stack", () => {
-      let won_game = {
-        ...Game.initial(),
-        scene: {
-          ...Game.initial().scene,
-          player: Game.initial().scene.goal,
-        },
-      };
       expect(length(Game.step(won_game, Space).levels))
       == length(won_game.levels)
-      - 1;
+      - 1
     });
   })
 });

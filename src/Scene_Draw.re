@@ -80,16 +80,20 @@ let draw_rocks = (context, rocks: list(Rock.t)): unit =>
     },
   );
 
+let draw_hammers = (context, hammers): unit =>
+  Belt.List.forEach(hammers, hammer => draw_rect(context, "#ffbf00", hammer));
+
 let draw = (context: context, scene: scene): unit => {
   draw_goal(context, scene.goal);
   List.map(draw_moves_extra(context, _), scene.movesExtras) |> ignore;
   draw_path(context, getPath(scene));
-  draw_player(context, scene.player);
+  draw_player(context, scene.revertible.player);
   draw_walls(context, scene.walls);
-  draw_rocks(context, scene.rocks);
+  draw_rocks(context, scene.revertible.rocks);
+  draw_hammers(context, scene.hammers);
 };
 
-let ui = scene =>
+let ui = (scene: scene) =>
   <>
     {React.string("moves left: " ++ string_of_int(scene.movesLeft))}
     {if (is_game_over(scene)) {
@@ -97,7 +101,9 @@ let ui = scene =>
      } else {
        <>
          <br />
-         {React.string("Use the arrow keys to move and space to undo moves.")}
+         {React.string(
+            "Use the arrow keys to move and space to revert moves.",
+          )}
        </>;
      }}
   </>;
