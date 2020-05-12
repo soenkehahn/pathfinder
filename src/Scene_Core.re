@@ -8,14 +8,9 @@ let modifyX = (position, f) => {...position, x: f(position.x)};
 let modifyY = (position, f) => {...position, y: f(position.y)};
 
 module Player = {
-  type t = {position};
+  type t = position;
 
-  let initial: t = {
-    position: {
-      x: 0,
-      y: 0,
-    },
-  };
+  let initial: t = {x: 0, y: 0};
 };
 
 module MovesExtra = {
@@ -37,26 +32,9 @@ module Rock = {
   };
 };
 
-// fixme: where to put previous?
-
 type revertible = {
-  movesLeft: int,
   player: Player.t,
-  previous: option(revertible),
   rocks: list(Rock.t),
-};
-
-let rec mapAllScenes =
-        (revertable: revertible, f: revertible => revertible): revertible =>
-  f({
-    ...revertable,
-    previous:
-      Belt.Option.map(revertable.previous, scene => mapAllScenes(scene, f)),
-  });
-
-let modifyMovesLeft = (revertable, f) => {
-  ...revertable,
-  movesLeft: f(revertable.movesLeft),
 };
 
 let modifyPlayer = (revertable, f) => {
@@ -71,6 +49,8 @@ let modifyRocks =
 
 type scene = {
   revertible,
+  history: list(revertible),
+  movesLeft: int,
   hasHammer: bool,
   goal: position,
   movesExtras: list(MovesExtra.t),
@@ -78,13 +58,18 @@ type scene = {
   hammers: list(position),
 };
 
-let getPath = (scene: scene): list(position) => {
-  let rec inner = (revertible: revertible): list(position) => {
-    let head = revertible.player.position;
-    let rest = Belt.Option.mapWithDefault(revertible.previous, [], inner);
-    [head, ...rest];
-  };
-  inner(scene.revertible);
+let modifyMovesLeft = (scene, f) => {
+  ...scene,
+  movesLeft: f(scene.movesLeft),
 };
 
-let setPrevious = (scene, previous) => {...scene, previous: Some(previous)};
+let pushHistory = (scene: scene, previous) => {
+  ...scene,
+  history: [previous, ...scene.history],
+};
+
+let getPath = (scene: scene): list(position) => {
+  let head = scene.revertible.player;
+  let rest = Belt.List.map(scene.history, revertable => revertable.player);
+  [head, ...rest];
+};

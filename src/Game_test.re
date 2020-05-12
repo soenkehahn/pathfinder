@@ -5,6 +5,7 @@ open Key;
 open List;
 open Game;
 open Scene_Core;
+open Test_Utils;
 
 describe("initial", () => {
   open Level_Parser;
@@ -21,18 +22,10 @@ describe("initial", () => {
 
 describe("levels", () => {
   describe("when the game is over", () => {
-    // fixme: make simpler
     let won_game = {
       ...Game.initial(),
-      scene: {
-        ...Game.initial().scene,
-        revertible: {
-          ...Game.initial().scene.revertible,
-          player: {
-            position: Game.initial().scene.goal,
-          },
-        },
-      },
+      scene:
+        test_scene(~playerPosition={x: 3, y: 0}, ~goal={x: 3, y: 0}, ()),
     };
 
     test("it switches to the next level", () => {

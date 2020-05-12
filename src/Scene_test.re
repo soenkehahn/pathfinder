@@ -4,41 +4,13 @@ open Scene;
 open Expect;
 open! Expect.Operators;
 open Key;
+open Test_Utils;
 
 let rec steps = (scene, keys) =>
   switch (keys) {
   | [key, ...rest] => scene |> step(_, key) |> steps(_, rest)
   | [] => scene
   };
-
-let test_scene =
-    (
-      ~movesLeft: int=3,
-      ~playerPosition: position=Player.initial.position,
-      ~previous: option(revertible)=None,
-      ~rocks=[],
-      ~hasHammer: bool=false,
-      ~goal={x: 3, y: 0},
-      ~movesExtras=[],
-      ~walls=[],
-      ~hammers=[],
-      (),
-    )
-    : scene => {
-  revertible: {
-    movesLeft,
-    player: {
-      position: playerPosition,
-    },
-    previous,
-    rocks,
-  },
-  hasHammer,
-  goal,
-  movesExtras,
-  walls,
-  hammers,
-};
 
 describe("moving", () => {
   let table = [
@@ -50,19 +22,18 @@ describe("moving", () => {
 
   testAll(
     "moves the player in the given direction", table, ((direction, expected)) =>
-    expect(step(test_scene(), direction).revertible.player.position)
-    == expected
+    expect(step(test_scene(), direction).revertible.player) == expected
   );
 
   test("moves the player multiple times", () => {
     let scene = test_scene() |> steps(_, [Up, Right]);
-    expect(scene.revertible.player.position) == {x: 1, y: 1};
+    expect(scene.revertible.player) == {x: 1, y: 1};
   });
 
   test("counts down the moves", () => {
-    let initial = test_scene(~movesLeft=3, ()).revertible.movesLeft;
+    let initial = test_scene(~movesLeft=3, ()).movesLeft;
     let scene = test_scene() |> step(_, Up);
-    expect((initial, scene.revertible.movesLeft)) == (3, 2);
+    expect((initial, scene.movesLeft)) == (3, 2);
   });
 
   test("disallows movements when movesLeft is 0 foo", () => {
@@ -80,22 +51,23 @@ describe("revert", () => {
   test("moves to the last position", () => {
     let scene =
       test_scene(
-        ~previous=
-          Some(test_scene(~playerPosition={x: 23, y: 42}, ()).revertible),
+        ~history=[
+          test_scene(~playerPosition={x: 23, y: 42}, ()).revertible,
+        ],
         (),
       )
       |> step(_, Space);
-    expect(scene.revertible.player.position) == {x: 23, y: 42};
+    expect(scene.revertible.player) == {x: 23, y: 42};
   });
 
   test("increases movesLeft", () => {
     let scene = test_scene(~movesLeft=3, ()) |> steps(_, [Up, Space]);
-    expect(scene.revertible.movesLeft) == 3;
+    expect(scene.movesLeft) == 3;
   });
 
   test("resets the history", () => {
     let scene = test_scene() |> steps(_, [Up, Space]);
-    expect(scene.revertible.previous) == None;
+    expect(scene.history) == [];
   });
 
   test("on the initial scene doesn't do anything", () => {
@@ -107,12 +79,13 @@ describe("revert", () => {
     let scene =
       test_scene(
         ~movesLeft=0,
-        ~previous=
-          Some(test_scene(~playerPosition={x: 23, y: 42}, ()).revertible),
+        ~history=[
+          test_scene(~playerPosition={x: 23, y: 42}, ()).revertible,
+        ],
         (),
       )
       |> step(_, Space);
-    expect(scene.revertible.player.position) == {x: 23, y: 42};
+    expect(scene.revertible.player) == {x: 23, y: 42};
   });
 });
 
@@ -133,7 +106,7 @@ describe("is_game_over", () => {
   });
 });
 
-describe("moves extra", () => {
+describe("moves extras", () => {
   let scene =
     test_scene(
       ~movesLeft=3,
@@ -148,10 +121,7 @@ describe("moves extra", () => {
     );
 
   test("gives the player extra moves", () => {
-    expect(step(scene, Right).revertible.movesLeft)
-    == scene.revertible.movesLeft
-    - 1
-    + 3
+    expect(step(scene, Right).movesLeft) == scene.movesLeft - 1 + 3
   });
 
   test("removes the extra from the scene", () => {
@@ -163,7 +133,7 @@ describe("moves extra", () => {
   });
 
   test("revert doesn't remove added moves", () => {
-    expect(steps(scene, [Right, Space]).revertible.movesLeft) == 6
+    expect(steps(scene, [Right, Space]).movesLeft) == 6
   });
 
   describe("reverting twice", () => {
@@ -184,10 +154,7 @@ describe("moves extra", () => {
     });
 
     test("reverting twice doesn't remove added moves", () => {
-      expect(
-        steps(scene, [Right, Right, Space, Space]).revertible.movesLeft,
-      )
-      == 6
+      expect(steps(scene, [Right, Right, Space, Space]).movesLeft) == 6
     });
   });
 });
@@ -209,7 +176,7 @@ describe("rocks", () => {
 
   test("rocks can't be passed through on the first attempt", () => {
     let scene = test_scene(~rocks=[initial({x: 1, y: 0})], ());
-    expect(step(scene, Right).revertible.player.position) == {x: 0, y: 0};
+    expect(step(scene, Right).revertible.player) == {x: 0, y: 0};
   });
 
   test("rocks can be destroyed with three moves", () => {
@@ -221,15 +188,14 @@ describe("rocks", () => {
   test("destroying rocks costs moves", () => {
     let scene =
       test_scene(~movesLeft=5, ~rocks=[initial({x: 1, y: 0})], ());
-    expect(steps(scene, [Right, Right, Right]).revertible.movesLeft) == 2;
+    expect(steps(scene, [Right, Right, Right]).movesLeft) == 2;
   });
 
   test("destroying rocks can happen in non-consecutive moves", () => {
     let scene =
       test_scene(~movesLeft=6, ~rocks=[initial({x: 1, y: 0})], ());
     expect(
-      steps(scene, [Right, Up, Down, Right, Right, Right]).revertible.player.
-        position,
+      steps(scene, [Right, Up, Down, Right, Right, Right]).revertible.player,
     )
     == {x: 1, y: 0};
   });
@@ -245,7 +211,7 @@ describe("rocks", () => {
   });
 });
 
-describe("hammer extra", () => {
+describe("hammer extras", () => {
   test("get removed from the scene when passed through", () => {
     let scene = test_scene(~hammers=[{x: 1, y: 0}], ());
     expect(step(scene, Right).hammers) == [];

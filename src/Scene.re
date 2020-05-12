@@ -2,14 +2,19 @@ open Key;
 open Scene_Core;
 
 let revert = (scene): scene =>
-  switch (scene.revertible.previous) {
-  | Some(previous) => {...scene, revertible: previous}
-  | None => scene
+  switch (scene.history) {
+  | [previous, ...rest] => {
+      ...scene,
+      movesLeft: scene.movesLeft + 1,
+      revertible: previous,
+      history: rest,
+    }
+  | [] => scene
   };
 
 let move_player = (scene: scene, f: position => position) => {
-  let newPlayerPosition = f(scene.revertible.player.position);
-  if (scene.revertible.movesLeft <= 0) {
+  let newPlayerPosition = f(scene.revertible.player);
+  if (scene.movesLeft <= 0) {
     scene;
   } else if (List.mem(newPlayerPosition, scene.walls)) {
     scene;
@@ -36,29 +41,28 @@ let move_player = (scene: scene, f: position => position) => {
               Some(rock);
             }
           )
-        )
-        |> modifyMovesLeft(_, moves => moves - 1)
-        |> setPrevious(_, scene.revertible),
-    };
+        ),
+    }
+    |> pushHistory(_, scene.revertible)
+    |> modifyMovesLeft(_, moves => moves - 1);
   } else {
     {
       ...scene,
       revertible:
-        scene.revertible
-        |> modifyPlayer(_, _player => {position: newPlayerPosition})
-        |> modifyMovesLeft(_, moves => moves - 1)
-        |> setPrevious(_, scene.revertible),
-    };
+        scene.revertible |> modifyPlayer(_, _player => newPlayerPosition),
+    }
+    |> pushHistory(_, scene.revertible)
+    |> modifyMovesLeft(_, moves => moves - 1);
   };
 };
 
-let is_game_over = scene => scene.revertible.player.position == scene.goal;
+let is_game_over = scene => scene.revertible.player == scene.goal;
 
 let processMovesExtras = (scene: scene): scene => {
   open MovesExtra;
   let (activeExtras: list(t), remainingExtras) =
     List.partition(
-      extra => extra.position == scene.revertible.player.position,
+      extra => extra.position == scene.revertible.player,
       scene.movesExtras,
     );
   let extraMoves =
@@ -67,10 +71,7 @@ let processMovesExtras = (scene: scene): scene => {
     |> List.fold_left((+), 0, _);
   {
     ...scene,
-    revertible:
-      mapAllScenes(scene.revertible, revertible =>
-        {...revertible, movesLeft: revertible.movesLeft + extraMoves}
-      ),
+    movesLeft: scene.movesLeft + extraMoves,
     movesExtras: remainingExtras,
   };
 };
@@ -78,12 +79,10 @@ let processMovesExtras = (scene: scene): scene => {
 let processHammers = (scene: scene): scene => {
   let (activeHammers, remainingHammers) =
     List.partition(
-      hammer => hammer == scene.revertible.player.position,
+      hammer => hammer == scene.revertible.player,
       scene.hammers,
     );
-  let hasHammer = activeHammers->List.length > 0;
-  let scene = {...scene, hammers: remainingHammers};
-  if (hasHammer) {
+  if (activeHammers->List.length > 0) {
     {...scene, hasHammer: true, hammers: remainingHammers};
   } else {
     scene;
@@ -103,8 +102,8 @@ let step = (scene: scene, key: key): scene =>
       | Down => scene |> move_player(_, modifyY(_, y => y - 1))
       | Left => scene |> move_player(_, modifyX(_, x => x - 1))
       | Right => scene |> move_player(_, modifyX(_, x => x + 1))
-      | Space => revert(scene)
+      | Space => scene->revert
       }
     )
-    |> processExtras(_);
+    ->processExtras;
   };

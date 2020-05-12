@@ -8,7 +8,7 @@ describe("parse", () => {
   describe("player parsing", () => {
     test("it parses the player's position", () => {
       let csv = "Player,Goal";
-      expect(parse(csv).revertible.player.position) == {x: 0, y: 0};
+      expect(parse(csv).revertible.player) == {x: 0, y: 0};
     });
 
     testAll(
@@ -20,7 +20,7 @@ describe("parse", () => {
         "Goal\nEmpty\nPlayer",
       ],
       csv =>
-      expect(parse(csv).revertible.player.position) == {x: 0, y: 0}
+      expect(parse(csv).revertible.player) == {x: 0, y: 0}
     );
   });
 

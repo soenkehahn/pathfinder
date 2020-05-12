@@ -87,11 +87,11 @@ let parse = (csv: string): scene => {
   let grid = parse_grid(csv);
   {
     revertible: {
-      movesLeft: 3,
       player: Player.initial,
-      previous: None,
       rocks: parse_rocks(grid),
     },
+    history: [],
+    movesLeft: 3,
     hasHammer: false,
     goal: parse_goal(grid),
     movesExtras: parse_moves_extras(grid),
