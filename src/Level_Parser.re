@@ -86,13 +86,16 @@ let parse_hammers = grid =>
 let parse = (csv: string): scene => {
   let grid = parse_grid(csv);
   {
-    movesLeft: 3,
-    player: Player.initial,
+    revertible: {
+      movesLeft: 3,
+      player: Player.initial,
+      previous: None,
+      rocks: parse_rocks(grid),
+    },
+    hasHammer: false,
     goal: parse_goal(grid),
-    previous: None,
     movesExtras: parse_moves_extras(grid),
     walls: parse_walls(grid),
-    rocks: parse_rocks(grid),
     hammers: parse_hammers(grid),
   };
 };

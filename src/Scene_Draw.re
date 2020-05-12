@@ -87,21 +87,25 @@ let draw = (context: context, scene: scene): unit => {
   draw_goal(context, scene.goal);
   List.map(draw_moves_extra(context, _), scene.movesExtras) |> ignore;
   draw_path(context, getPath(scene));
-  draw_player(context, scene.player.position);
+  draw_player(context, scene.revertible.player.position);
   draw_walls(context, scene.walls);
-  draw_rocks(context, scene.rocks);
+  draw_rocks(context, scene.revertible.rocks);
   draw_hammers(context, scene.hammers);
 };
 
-let ui = scene =>
+let ui = (scene: scene) =>
   <>
-    {React.string("moves left: " ++ string_of_int(scene.movesLeft))}
+    {React.string(
+       "moves left: " ++ string_of_int(scene.revertible.movesLeft),
+     )}
     {if (is_game_over(scene)) {
        <> <br /> {React.string("You won!")} </>;
      } else {
        <>
          <br />
-         {React.string("Use the arrow keys to move and space to undo moves.")}
+         {React.string(
+            "Use the arrow keys to move and space to revert moves.",
+          )}
        </>;
      }}
   </>;

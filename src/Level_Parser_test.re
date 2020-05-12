@@ -8,7 +8,7 @@ describe("parse", () => {
   describe("player parsing", () => {
     test("it parses the player's position", () => {
       let csv = "Player,Goal";
-      expect(parse(csv).player.position) == {x: 0, y: 0};
+      expect(parse(csv).revertible.player.position) == {x: 0, y: 0};
     });
 
     testAll(
@@ -20,7 +20,7 @@ describe("parse", () => {
         "Goal\nEmpty\nPlayer",
       ],
       csv =>
-      expect(parse(csv).player.position) == {x: 0, y: 0}
+      expect(parse(csv).revertible.player.position) == {x: 0, y: 0}
     );
   });
 
@@ -74,7 +74,7 @@ describe("parse", () => {
   describe("rocks parsing", () => {
     test("it adds rocks to the level at the right position", () => {
       let csv = "Player,Goal,Rock";
-      expect(parse(csv).rocks)
+      expect(parse(csv).revertible.rocks)
       == [{
             position: {
               x: 2,

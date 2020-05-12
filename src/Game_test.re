@@ -4,6 +4,7 @@ open! Expect.Operators;
 open Key;
 open List;
 open Game;
+open Scene_Core;
 
 describe("initial", () => {
   open Level_Parser;
@@ -20,13 +21,16 @@ describe("initial", () => {
 
 describe("levels", () => {
   describe("when the game is over", () => {
+    // fixme: make simpler
     let won_game = {
       ...Game.initial(),
       scene: {
         ...Game.initial().scene,
-        player: {
-          ...Scene_Core.Player.initial,
-          position: Game.initial().scene.goal,
+        revertible: {
+          ...Game.initial().scene.revertible,
+          player: {
+            position: Game.initial().scene.goal,
+          },
         },
       },
     };
