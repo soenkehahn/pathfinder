@@ -1,3 +1,5 @@
+open Belt;
+open List;
 open Jest;
 open Scene_Core;
 open Scene;
@@ -8,7 +10,7 @@ open Test_Utils;
 
 let rec steps = (scene, keys) =>
   switch (keys) {
-  | [key, ...rest] => scene |> step(_, key) |> steps(_, rest)
+  | [key, ...rest] => scene->step(key)->steps(rest)
   | [] => scene
   };
 
@@ -26,13 +28,13 @@ describe("moving", () => {
   );
 
   test("moves the player multiple times", () => {
-    let scene = test_scene() |> steps(_, [Up, Right]);
+    let scene = test_scene()->steps([Up, Right]);
     expect(scene.revertible.player) == {x: 1, y: 1};
   });
 
   test("counts down the moves", () => {
     let initial = test_scene(~movesLeft=3, ()).movesLeft;
-    let scene = test_scene() |> step(_, Up);
+    let scene = test_scene()->step(Up);
     expect((initial, scene.movesLeft)) == (3, 2);
   });
 
@@ -42,7 +44,7 @@ describe("moving", () => {
   });
 
   test("tracks path of player", () => {
-    let scene = test_scene() |> steps(_, [Up, Right]);
+    let scene = test_scene()->steps([Up, Right]);
     expect(getPath(scene)) == [{x: 1, y: 1}, {x: 0, y: 1}, {x: 0, y: 0}];
   });
 });
@@ -56,22 +58,22 @@ describe("revert", () => {
         ],
         (),
       )
-      |> step(_, Space);
+      ->step(Space);
     expect(scene.revertible.player) == {x: 23, y: 42};
   });
 
   test("increases movesLeft", () => {
-    let scene = test_scene(~movesLeft=3, ()) |> steps(_, [Up, Space]);
+    let scene = test_scene(~movesLeft=3, ())->steps([Up, Space]);
     expect(scene.movesLeft) == 3;
   });
 
   test("resets the history", () => {
-    let scene = test_scene() |> steps(_, [Up, Space]);
+    let scene = test_scene()->steps([Up, Space]);
     expect(scene.history) == [];
   });
 
   test("on the initial scene doesn't do anything", () => {
-    let scene = test_scene() |> step(_, Space);
+    let scene = test_scene()->step(Space);
     expect(scene) == scene;
   });
 
@@ -84,7 +86,7 @@ describe("revert", () => {
         ],
         (),
       )
-      |> step(_, Space);
+      ->step(Space);
     expect(scene.revertible.player) == {x: 23, y: 42};
   });
 });
@@ -203,9 +205,8 @@ describe("rocks", () => {
   test("revert will revert damage to rocks", () => {
     let scene = test_scene(~rocks=[initial({x: 1, y: 0})], ());
     expect(
-      steps(scene, [Right, Space]).revertible.rocks
-      |> Belt.List.headExn
-      |> (rock => rock.structuralIntegrity),
+      steps(scene, [Right, Space]).revertible.rocks->headExn.
+        structuralIntegrity,
     )
     == 3;
   });

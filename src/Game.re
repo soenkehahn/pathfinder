@@ -2,16 +2,17 @@ open Scene_Core;
 open Scene;
 open Key;
 open Level_Parser;
+open Belt;
 
 type game = {
   scene,
   levels: list(scene),
 };
 
-let levels = Levels_All.csvs |> List.map(parse, _);
+let levels = Levels_All.csvs->List.map(parse);
 
 let initial = (~level: int=1, ()) =>
-  switch (levels |> Belt.List.drop(_, level - 1)) {
+  switch (levels->List.drop(level - 1)) {
   | Some([current, ...rest]) => {scene: current, levels: rest}
   | _ =>
     exception NoLevels;

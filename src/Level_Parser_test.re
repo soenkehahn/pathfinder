@@ -3,6 +3,7 @@ open Expect;
 open! Expect.Operators;
 open Level_Parser;
 open Scene_Core;
+open Belt;
 
 describe("parse", () => {
   describe("player parsing", () => {
@@ -51,15 +52,13 @@ describe("parse", () => {
 
     test("it adds moves extras to the level at the right position", () => {
       let csv = "Player,Goal,Moves 4";
-      expect(parse(csv).movesExtras |> List.map(extra => extra.position, _))
+      expect(parse(csv).movesExtras->List.map(extra => extra.position))
       == [{x: 2, y: 0}];
     });
 
     test("it parses the number of moves", () => {
       let csv = "Player,Goal,Moves 4";
-      expect(
-        parse(csv).movesExtras |> List.map(extra => extra.extraMoves, _),
-      )
+      expect(parse(csv).movesExtras->List.map(extra => extra.extraMoves))
       == [4];
     });
   });

@@ -1,5 +1,6 @@
 open Game;
 open Key;
+open Belt;
 
 let drawGame = (canvas: Dom.element, game: game): unit => {
   open Webapi.Canvas;
@@ -38,8 +39,8 @@ module DrawGame = {
     useLayoutEffect1(
       () => {
         canvasElementRef.current
-        |> Belt.Option.map(_, canvas => drawGame(canvas, game))
-        |> ignore;
+        ->Option.map(canvas => drawGame(canvas, game))
+        ->ignore;
         None;
       },
       [|game|],
