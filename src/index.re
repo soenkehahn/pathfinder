@@ -34,10 +34,10 @@ module DrawGame = {
   [@react.component]
   let make = (~game: game) => {
     open React;
-    let canvasElementRef: Ref.t(option(Dom.element)) = useRef(None);
+    let canvasElementRef: React.ref(option(Dom.element)) = useRef(None);
     useLayoutEffect1(
       () => {
-        Ref.current(canvasElementRef)
+        canvasElementRef.current
         |> Belt.Option.map(_, canvas => drawGame(canvas, game))
         |> ignore;
         None;
@@ -50,9 +50,9 @@ module DrawGame = {
         width="800"
         height="600"
         style=centerStyle
-        ref={ReactDOMRe.Ref.callbackDomRef(elem =>
-          React.Ref.setCurrent(canvasElementRef, Js.Nullable.toOption(elem))
-        )}
+        ref={ReactDOMRe.Ref.callbackDomRef(elem => {
+          canvasElementRef.current = Js.Nullable.toOption(elem)
+        })}
       />
     </>;
   };
