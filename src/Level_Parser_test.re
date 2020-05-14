@@ -13,7 +13,7 @@ describe("parse", () => {
     });
 
     testAll(
-      "it always parses the player's position as the coordinate origin",
+      "always parses the player's position as the coordinate origin",
       [
         "Empty,Player,Goal",
         "Player,Empty,Goal",
@@ -22,6 +22,16 @@ describe("parse", () => {
       ],
       csv =>
       expect(parse(csv).revertible.player) == {x: 0, y: 0}
+    );
+
+    test(
+      "parses numbers after 'Player' in the csv as the number of initial moves",
+      () =>
+      expect(parse("Player 4,Goal").movesLeft) == 4
+    );
+
+    test("returns 3 as the default number of moves", () =>
+      expect(parse("Player,Goal").movesLeft) == 3
     );
   });
 

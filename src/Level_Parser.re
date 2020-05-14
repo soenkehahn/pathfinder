@@ -13,7 +13,16 @@ let filter2d =
     : list((int, int, 'a)) =>
   grid->map(row => row->keep(((_x, _y, cell)) => f(cell)))->flatten;
 
-let parse_grid = (csv: string): list(list((int, int, string))) => {
+let parse_number = (cell): option(int) => {
+  Js.String.split(" ", cell)->Array.get(1)->Option.map(int_of_string);
+};
+
+type parseResult = {
+  initialMoves: int,
+  grid: list(list((int, int, string))),
+};
+
+let parse_grid = (csv: string): parseResult => {
   let cells: list(list(string)) =
     Js.String.(
       split("\n", csv)->fromArray->map(row => split(",", row)->fromArray)
@@ -24,20 +33,19 @@ let parse_grid = (csv: string): list(list((int, int, string))) => {
     withXs->mapWithIndex((rowIndex, row) =>
       row->map(((x, cell)) => (x, length(withXs) - 1 - rowIndex, cell))
     );
-  let players = withCoordinates->filter2d(cell => cell == "Player");
-  let player =
+  let players =
+    withCoordinates->filter2d(cell => Js.String.startsWith("Player", cell));
+  let (player, initialMoves) =
     switch (players) {
-    | [(x, y, _)] => {x, y}
+    | [(x, y, cell)] => ({x, y}, parse_number(cell))
     | [] => raise(ParseError("no player found"))
     | [_, ..._] => raise(ParseError("multiple players found"))
     };
-  withCoordinates->map2d(((x, y, cell)) =>
-    (x - player.x, y - player.y, cell)
-  );
-};
-
-let parse_moves = (cell): int => {
-  int_of_string(Js.String.split(" ", cell)->Array.getExn(1));
+  let grid =
+    withCoordinates->map2d(((x, y, cell)) =>
+      (x - player.x, y - player.y, cell)
+    );
+  {grid, initialMoves: initialMoves->Option.getWithDefault(3)};
 };
 
 let parse_goal = grid =>
@@ -53,7 +61,7 @@ let parse_moves_extras = (grid): list(MovesExtra.t) =>
     ->filter2d(cell => Js.String.startsWith("Moves", cell))
     ->map(((x, y, cell)) =>
         {
-          extraMoves: parse_moves(cell),
+          extraMoves: parse_number(cell)->Option.getExn,
           position: {
             x,
             y,
@@ -74,14 +82,14 @@ let parse_hammers = grid =>
   grid->filter2d(cell => cell == "Hammer")->map(((x, y, _cell)) => {x, y});
 
 let parse = (csv: string): scene => {
-  let grid = parse_grid(csv);
+  let {grid, initialMoves} = parse_grid(csv);
   {
     revertible: {
       player: Player.initial,
       rocks: parse_rocks(grid),
     },
     history: [],
-    movesLeft: 3,
+    movesLeft: initialMoves,
     hasHammer: false,
     goal: parse_goal(grid),
     movesExtras: parse_moves_extras(grid),
