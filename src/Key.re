@@ -5,7 +5,7 @@ type key =
   | Right
   | Space;
 
-let key_of_js_key = (key: string): option(key) =>
+let fromString = (key: string): option(key) =>
   switch (key) {
   | "ArrowUp" => Some(Up)
   | "ArrowDown" => Some(Down)

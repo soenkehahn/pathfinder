@@ -8,7 +8,7 @@ open Belt;
 open List;
 
 let testLevels: list(scene) =
-  [1, 2, 3]->List.map(i => test_scene(~playerPosition={x: i, y: 0}, ()));
+  [1, 2, 3]->List.map(i => testScene(~playerPosition={x: i, y: 0}, ()));
 
 describe("dropLevels", () => {
   test("starts with the given level", () => {
@@ -25,19 +25,19 @@ describe("dropLevels", () => {
 describe("levels", () => {
   describe("when the game is over", () => {
     open Game;
-    let won_game = {
+    let wonGame = {
       scene:
-        test_scene(~playerPosition={x: 3, y: 0}, ~goal={x: 3, y: 0}, ()),
+        testScene(~playerPosition={x: 3, y: 0}, ~goal={x: 3, y: 0}, ()),
       levels: testLevels,
     };
 
     test("it switches to the next level", () => {
-      expect(Game.step(won_game, Space).scene) == testLevels->List.headExn
+      expect(Game.step(wonGame, Space).scene) == testLevels->List.headExn
     });
 
     test("pops the level from the level stack", () => {
-      expect(length(Game.step(won_game, Space).levels))
-      == length(won_game.levels)
+      expect(length(Game.step(wonGame, Space).levels))
+      == length(wonGame.levels)
       - 1
     });
   })

@@ -14,7 +14,7 @@ let revert = (scene): scene =>
   | [] => scene
   };
 
-let move_player = (scene: scene, f: position => position) => {
+let movePlayer = (scene: scene, f: position => position) => {
   let newPlayerPosition = f(scene.revertible.player);
   if (scene.movesLeft <= 0) {
     scene;
@@ -55,7 +55,7 @@ let move_player = (scene: scene, f: position => position) => {
   };
 };
 
-let is_game_over = scene => scene.revertible.player == scene.goal;
+let isGameOver = scene => scene.revertible.player == scene.goal;
 
 let processMovesExtras = (scene: scene): scene => {
   let (activeExtras: list(MovesExtra.t), remainingExtras) =
@@ -84,15 +84,15 @@ let processExtras = (scene: scene): scene =>
   scene->processMovesExtras->processHammers;
 
 let step = (scene: scene, key: key): scene =>
-  if (is_game_over(scene)) {
+  if (isGameOver(scene)) {
     scene;
   } else {
     (
       switch (key) {
-      | Up => scene->move_player(modifyY(_, y => y + 1))
-      | Down => scene->move_player(modifyY(_, y => y - 1))
-      | Left => scene->move_player(modifyX(_, x => x - 1))
-      | Right => scene->move_player(modifyX(_, x => x + 1))
+      | Up => scene->movePlayer(modifyY(_, y => y + 1))
+      | Down => scene->movePlayer(modifyY(_, y => y - 1))
+      | Left => scene->movePlayer(modifyX(_, x => x - 1))
+      | Right => scene->movePlayer(modifyX(_, x => x + 1))
       | Space => scene->revert
       }
     )

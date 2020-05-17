@@ -1,4 +1,3 @@
-open Key;
 open Belt;
 open FetchLevels;
 open Js.Promise;
@@ -70,7 +69,7 @@ module App = {
     let handleKeyboardEvents = (event): unit => {
       Webapi.Dom.KeyboardEvent.(
         if (!repeat(event)) {
-          switch (key_of_js_key(key(event))) {
+          switch (Key.fromString(key(event))) {
           | Some(key) => setGame(game => Game.step(game, key))
           | None => ()
           };

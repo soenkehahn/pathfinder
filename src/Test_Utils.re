@@ -1,6 +1,6 @@
 open Scene_Core;
 
-let test_scene =
+let testScene =
     (
       ~movesLeft: int=3,
       ~playerPosition: position=Player.initial,
