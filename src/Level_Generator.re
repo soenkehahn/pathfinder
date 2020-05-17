@@ -1,50 +1,42 @@
 open Node.Child_process;
 open Belt;
 
-let convertToCsv = (name): unit => {
-  let file = name ++ ".ods";
+let generateCsvs = (): unit => {
   execSync(
-    "libreoffice --headless --convert-to csv " ++ file,
-    option(~cwd="levels", ()),
+    "libreoffice --convert-to csv levels/*.ods --outdir dist",
+    option(),
   )
   ->ignore;
 };
 
-let toReasonFile = (name): unit => {
-  let csv = Node.Fs.readFileAsUtf8Sync("levels/" ++ name ++ ".csv");
+let concatWith = (chunks, separator): string => {
+  chunks
+  ->List.mapWithIndex((i, chunk) =>
+      if (i == 0) {
+        chunk;
+      } else {
+        separator ++ chunk;
+      }
+    )
+  ->List.reduce("", (++));
+};
+
+let main = () => {
+  print_endline("generating csvs...");
+  generateCsvs();
+
+  let levelNames: list(string) =
+    Node.Fs.readdirSync("levels")
+    ->List.fromArray
+    ->List.keep(file => Js.String.endsWith(".ods", file))
+    ->List.map(file => "."->Js.String.split(file)->Array.getExn(0));
+
   Node.Fs.writeFileAsUtf8Sync(
-    "src/Levels_" ++ name ++ ".re",
-    "let csv = \"" ++ csv ++ "\";",
+    "dist/all_levels.json",
+    "["
+    ++ levelNames
+       ->List.map(name => "\"" ++ name ++ ".csv\"")
+       ->concatWith(", ")
+    ++ "]",
   );
 };
-
-let generate = name => {
-  convertToCsv(name);
-  toReasonFile(name);
-};
-
-let levelNames: list(string) =
-  Node.Fs.readdirSync("levels")
-  ->List.fromArray
-  ->List.keep(file => Js.String.endsWith(".ods", file))
-  ->List.map(file => Js.String.split(".", file)->Array.getExn(0));
-
-List.forEach(
-  levelNames,
-  levelName => {
-    print_endline("generating level " ++ levelName ++ "...");
-    generate(levelName);
-  },
-);
-
-Node.Fs.writeFileAsUtf8Sync(
-  "src/Levels_All.re",
-  "let csvs = ["
-  ++ Js.String.concatMany(
-       List.toArray(
-         levelNames->List.map(name => "Levels_" ++ name ++ ".csv, "),
-       ),
-       "",
-     )
-  ++ "];",
-);

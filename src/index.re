@@ -1,8 +1,9 @@
-open Game;
 open Key;
 open Belt;
+open FetchLevels;
+open Js.Promise;
 
-let drawGame = (canvas: Dom.element, game: game): unit => {
+let drawGame = (canvas: Dom.element, game: Game.t): unit => {
   open Webapi.Canvas;
   open Canvas2d;
   let width = float_of_int(CanvasElement.width(canvas));
@@ -33,7 +34,7 @@ let centerStyle =
 
 module DrawGame = {
   [@react.component]
-  let make = (~game: game) => {
+  let make = (~game: Game.t) => {
     open React;
     let canvasElementRef: React.ref(option(Dom.element)) = useRef(None);
     useLayoutEffect1(
@@ -61,18 +62,16 @@ module DrawGame = {
 
 module App = {
   [@react.component]
-  let make = () => {
+  let make = (~levels: list(Scene_Core.scene)) => {
     let url = ReasonReactRouter.useUrl();
     let (game, setGame) =
-      React.useState(() =>
-        Game.initial(~level=?int_of_string_opt(url.hash), ())
-      );
+      React.useState(() => Game.make(Game.dropLevels(url.hash, levels)));
 
     let handleKeyboardEvents = (event): unit => {
       Webapi.Dom.KeyboardEvent.(
         if (!repeat(event)) {
           switch (key_of_js_key(key(event))) {
-          | Some(key) => setGame(game => step(game, key))
+          | Some(key) => setGame(game => Game.step(game, key))
           | None => ()
           };
         }
@@ -98,4 +97,10 @@ module App = {
   };
 };
 
-ReactDOMRe.renderToElementWithId(<App />, "main");
+(
+  () => {
+    let%P levels = getLevels();
+    ReactDOMRe.renderToElementWithId(<App levels />, "main");
+    resolve();
+  }
+)();

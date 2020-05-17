@@ -2,34 +2,37 @@ open Jest;
 open Expect;
 open! Expect.Operators;
 open Key;
-open List;
-open Game;
 open Scene_Core;
 open Test_Utils;
+open Belt;
+open List;
 
-describe("initial", () => {
-  open Level_Parser;
-  open Levels_All;
+let testLevels: list(scene) =
+  [1, 2, 3]->List.map(i => test_scene(~playerPosition={x: i, y: 0}, ()));
 
+describe("dropLevels", () => {
   test("starts with the given level", () => {
-    expect(initial(~level=2, ()).scene) == parse(List.nth(csvs, 1))
+    expect(Game.dropLevels("2", testLevels)->List.headExn)
+    == testLevels->List.getExn(1)
   });
 
   test("when no level given, starts at 1", () => {
-    expect(initial().scene) == parse(Belt.List.headExn(csvs))
+    expect(Game.dropLevels("", testLevels)->List.headExn)
+    == testLevels->List.headExn
   });
 });
 
 describe("levels", () => {
   describe("when the game is over", () => {
+    open Game;
     let won_game = {
-      ...Game.initial(),
       scene:
         test_scene(~playerPosition={x: 3, y: 0}, ~goal={x: 3, y: 0}, ()),
+      levels: testLevels,
     };
 
     test("it switches to the next level", () => {
-      expect(Game.step(won_game, Space).scene) == List.nth(Game.levels, 1)
+      expect(Game.step(won_game, Space).scene) == testLevels->List.headExn
     });
 
     test("pops the level from the level stack", () => {
