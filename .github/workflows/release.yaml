@@ -7,6 +7,10 @@ jobs:
   build:
     runs-on: ubuntu-18.04
     steps:
+      - name: install libreoffice
+        run: |
+          sudo apt update
+          sudo apt install libreoffice
       - name: checkout
         uses: actions/checkout@v2
       - run: yarn ci
