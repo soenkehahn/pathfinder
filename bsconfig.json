@@ -18,12 +18,15 @@
   "bs-dependencies": [
     "reason-react",
     "bs-webapi",
-    "@glennsl/bs-jest"
+    "@glennsl/bs-jest",
+    "bs-fetch"
+  ],
+  "ppx-flags": [
+    "bs-let/ppx"
   ],
   "warnings": {
     "error": "+101"
   },
   "namespace": true,
-  "refmt": 3,
-  "ppx-flags": []
+  "refmt": 3
 }

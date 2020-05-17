@@ -1,22 +1,32 @@
 open Scene_Core;
 open Scene;
 open Key;
-open Level_Parser;
 open Belt;
+open List;
 
-type game = {
+type t = {
   scene,
   levels: list(scene),
 };
 
-let levels = Levels_All.csvs->List.map(parse);
-
-let initial = (~level: int=1, ()) =>
-  switch (levels->List.drop(level - 1)) {
-  | Some([current, ...rest]) => {scene: current, levels: rest}
-  | _ =>
+let make = (levels: list(scene)) =>
+  switch (levels) {
+  | [current, ...rest] => {scene: current, levels: rest}
+  | [] =>
     exception NoLevels;
     raise(NoLevels);
+  };
+
+let dropLevels = (level: string, levels: list(scene)): list(scene) =>
+  switch (int_of_string_opt(level)) {
+  | Some(level) => levels->drop(level - 1)->Option.getWithDefault([])
+  | None => levels
+  };
+
+let step = (game, key) =>
+  switch (is_game_over(game.scene), key, game.levels) {
+  | (true, Space, [next, ...rest]) => {scene: next, levels: rest}
+  | _ => {...game, scene: step(game.scene, key)}
   };
 
 let draw = (context, game) => Scene_Draw.draw(context, game.scene);
@@ -32,9 +42,3 @@ let ui = game =>
      | _ => React.null
      }}
   </>;
-
-let step = (game, key) =>
-  switch (is_game_over(game.scene), key, game.levels) {
-  | (true, Space, [next, ...rest]) => {scene: next, levels: rest}
-  | _ => {...game, scene: step(game.scene, key)}
-  };

@@ -13,6 +13,7 @@ jobs:
       - name: bundle
         run: |
           PATH=./node_modules/.bin:$PATH
+          yarn gen
           parcel build \
             --public-url https://soenkehahn.github.io/pathfinder/ \
             --no-source-maps \

@@ -1,10 +1,12 @@
 {
   "devDependencies": {
     "@glennsl/bs-jest": "^0.5.1",
+    "bs-let": "^0.1.16",
     "bs-platform": "^7.3.2",
     "bsb-js": "^1.1.7"
   },
   "dependencies": {
+    "bs-fetch": "^0.5.2",
     "bs-webapi": "^0.15.9",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
@@ -16,7 +18,7 @@
   "scripts": {
     "ci": "yarn install && bsb -make-world && yarn test",
     "test": "bsb -make-world && jest",
-    "generate-levels": "bsb && node ./src/Level_Generator.bs.js && bsb",
+    "generate-levels": "bsb -make-world && node ./src/Level_Generator_main.bs.js",
     "gen": "yarn generate-levels"
   }
 }
