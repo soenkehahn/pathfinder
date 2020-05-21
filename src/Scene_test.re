@@ -322,7 +322,7 @@ describe("irrevertable boulders", () => {
       == ({x: 0, y: 1}, [{x: 0, y: 0}]);
     });
 
-    test("is blocked by blocked boulders", () => {
+    test("blocked boulders block reverting", () => {
       let scene =
         testScene(
           ~movesLeft=10,

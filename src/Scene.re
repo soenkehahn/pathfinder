@@ -4,7 +4,7 @@ open Key;
 open Scene_Core;
 open Utils;
 
-let collidesWithImmovable = (position, scene) => {
+let collidesWithImmovable = (position, scene): bool => {
   let immovables =
     concatMany([|
       scene.revertible.rocks->map(rock => rock.position),
@@ -13,10 +13,10 @@ let collidesWithImmovable = (position, scene) => {
       scene.movesExtras->map(extra => extra.position),
       scene.walls,
     |]);
-  immovables->some(immovable => immovable == position);
+  immovables->has(position, (==));
 };
 
-let collidingBoulder = (scene, position) => {
+let collidingBoulder = (scene, position): option(position) => {
   let colliding = scene.boulders->keep(boulder => boulder == position);
   switch (colliding) {
   | [boulder] => Some(boulder)
@@ -41,9 +41,9 @@ let rec handleBoulderCollisions =
     } else {
       switch (scene->handleBoulderCollisions(direction, newBoulderPosition)) {
       | Blocked => Blocked
-      | BouldersShifted(newScene) =>
+      | BouldersShifted(modifiedScene) =>
         BouldersShifted(
-          newScene->replaceBoulder(collidingBoulder, newBoulderPosition),
+          modifiedScene->replaceBoulder(collidingBoulder, newBoulderPosition),
         )
       };
     };
@@ -98,11 +98,11 @@ let movePlayer = (scene: scene, direction: direction) => {
     ->modifyMovesLeft(moves => moves - 1);
   } else {
     switch (scene->handleBoulderCollisions(direction, newPlayerPosition)) {
-    | BouldersShifted(newScene) =>
+    | BouldersShifted(modifiedScene) =>
       {
-        ...newScene,
+        ...modifiedScene,
         revertible:
-          newScene.revertible->modifyPlayer(_player => newPlayerPosition),
+          modifiedScene.revertible->modifyPlayer(_player => newPlayerPosition),
       }
       ->pushHistory((direction->Key.revert, scene.revertible))
       ->modifyMovesLeft(moves => moves - 1)

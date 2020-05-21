@@ -58,19 +58,18 @@ let modifyMovesLeft = (scene, f) => {
   movesLeft: f(scene.movesLeft),
 };
 
-let modifyBoulders = (scene: scene, f: position => position) => {
+let replaceBoulder = (scene: scene, old: position, new_: position) => {
   ...scene,
-  boulders: scene.boulders->List.map(f),
+  boulders:
+    scene.boulders
+    ->List.map(p =>
+        if (p == old) {
+          new_;
+        } else {
+          p;
+        }
+      ),
 };
-
-let replaceBoulder = (scene: scene, old: position, new_: position) =>
-  scene->modifyBoulders(p =>
-    if (p == old) {
-      new_;
-    } else {
-      p;
-    }
-  );
 
 let pushHistory = (scene: scene, previous) => {
   ...scene,
