@@ -1,11 +1,5 @@
-type position = {
-  x: int,
-  y: int,
-};
-
-let modifyX = (position, f) => {...position, x: f(position.x)};
-
-let modifyY = (position, f) => {...position, y: f(position.y)};
+open Belt;
+open Key;
 
 module Player = {
   type t = position;
@@ -49,18 +43,32 @@ let modifyRocks =
 
 type scene = {
   revertible,
-  history: list(revertible),
+  history: list((Key.direction, revertible)),
   movesLeft: int,
   hasHammer: bool,
   goal: position,
   movesExtras: list(MovesExtra.t),
   walls: list(position),
   hammers: list(position),
+  boulders: list(position),
 };
 
 let modifyMovesLeft = (scene, f) => {
   ...scene,
   movesLeft: f(scene.movesLeft),
+};
+
+let replaceBoulder = (scene: scene, old: position, new_: position) => {
+  ...scene,
+  boulders:
+    scene.boulders
+    ->List.map(p =>
+        if (p == old) {
+          new_;
+        } else {
+          p;
+        }
+      ),
 };
 
 let pushHistory = (scene: scene, previous) => {
@@ -70,6 +78,7 @@ let pushHistory = (scene: scene, previous) => {
 
 let getPath = (scene: scene): list(position) => {
   let head = scene.revertible.player;
-  let rest = Belt.List.map(scene.history, revertable => revertable.player);
+  let rest =
+    Belt.List.map(scene.history, ((_, revertable)) => revertable.player);
   [head, ...rest];
 };

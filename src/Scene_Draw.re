@@ -2,6 +2,7 @@ open Belt;
 open List;
 open Scene_Core;
 open Scene;
+open Key;
 open Webapi.Canvas.Canvas2d;
 type context = Webapi.Canvas.Canvas2d.t;
 
@@ -78,6 +79,9 @@ let drawRocks = (context, rocks: list(Rock.t)): unit =>
 let drawHammers = (context, hammers): unit =>
   forEach(hammers, hammer => context->drawRect("#ffbf00", hammer));
 
+let drawBoulders = (context, boulders): unit =>
+  forEach(boulders, boulder => context->drawRect("#ec9ba4", boulder));
+
 let draw = (context: context, scene: scene): unit => {
   context->drawGoal(scene.goal);
   scene.movesExtras->map(context->drawMovesExtra(_))->ignore;
@@ -86,6 +90,7 @@ let draw = (context: context, scene: scene): unit => {
   context->drawWalls(scene.walls);
   context->drawRocks(scene.revertible.rocks);
   context->drawHammers(scene.hammers);
+  context->drawBoulders(scene.boulders);
 };
 
 let ui = (scene: scene) =>

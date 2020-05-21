@@ -2,20 +2,71 @@ open Belt;
 open List;
 open Key;
 open Scene_Core;
+open Utils;
 
-let revert = (scene): scene =>
+let collidesWithImmovable = (position, scene): bool => {
+  let immovables =
+    concatMany([|
+      scene.revertible.rocks->map(rock => rock.position),
+      scene.hammers,
+      [scene.goal],
+      scene.movesExtras->map(extra => extra.position),
+      scene.walls,
+    |]);
+  immovables->has(position, (==));
+};
+
+let collidingBoulder = (scene, position): option(position) => {
+  let colliding = scene.boulders->keep(boulder => boulder == position);
+  switch (colliding) {
+  | [boulder] => Some(boulder)
+  | [] => None
+  | _ => throw("invariant violated: multiple boulders in one position")
+  };
+};
+
+type boulderCollisionResult =
+  | BouldersShifted(scene)
+  | Blocked;
+
+let rec handleBoulderCollisions =
+        (scene: scene, direction: direction, position: position)
+        : boulderCollisionResult => {
+  switch (scene->collidingBoulder(position)) {
+  | None => BouldersShifted(scene)
+  | Some(collidingBoulder) =>
+    let newBoulderPosition = direction->move(collidingBoulder);
+    if (newBoulderPosition->collidesWithImmovable(scene)) {
+      Blocked;
+    } else {
+      switch (scene->handleBoulderCollisions(direction, newBoulderPosition)) {
+      | Blocked => Blocked
+      | BouldersShifted(modifiedScene) =>
+        BouldersShifted(
+          modifiedScene->replaceBoulder(collidingBoulder, newBoulderPosition),
+        )
+      };
+    };
+  };
+};
+
+let revert = (scene: scene): scene =>
   switch (scene.history) {
-  | [previous, ...rest] => {
-      ...scene,
-      movesLeft: scene.movesLeft + 1,
-      revertible: previous,
-      history: rest,
+  | [(direction, previous), ...rest] =>
+    switch (scene->handleBoulderCollisions(direction, previous.player)) {
+    | BouldersShifted(modifiedScene) => {
+        ...modifiedScene,
+        movesLeft: scene.movesLeft + 1,
+        revertible: previous,
+        history: rest,
+      }
+    | Blocked => scene
     }
   | [] => scene
   };
 
-let movePlayer = (scene: scene, f: position => position) => {
-  let newPlayerPosition = f(scene.revertible.player);
+let movePlayer = (scene: scene, direction: direction) => {
+  let newPlayerPosition = direction->move(scene.revertible.player);
   if (scene.movesLeft <= 0) {
     scene;
   } else if (scene.walls->has(newPlayerPosition, (==))) {
@@ -43,15 +94,20 @@ let movePlayer = (scene: scene, f: position => position) => {
           )
         ),
     }
-    ->pushHistory(scene.revertible)
+    ->pushHistory((direction->Key.revert, scene.revertible))
     ->modifyMovesLeft(moves => moves - 1);
   } else {
-    {
-      ...scene,
-      revertible: scene.revertible->modifyPlayer(_player => newPlayerPosition),
-    }
-    ->pushHistory(scene.revertible)
-    ->modifyMovesLeft(moves => moves - 1);
+    switch (scene->handleBoulderCollisions(direction, newPlayerPosition)) {
+    | BouldersShifted(modifiedScene) =>
+      {
+        ...modifiedScene,
+        revertible:
+          modifiedScene.revertible->modifyPlayer(_player => newPlayerPosition),
+      }
+      ->pushHistory((direction->Key.revert, scene.revertible))
+      ->modifyMovesLeft(moves => moves - 1)
+    | Blocked => scene
+    };
   };
 };
 
@@ -89,10 +145,7 @@ let step = (scene: scene, key: key): scene =>
   } else {
     (
       switch (key) {
-      | Up => scene->movePlayer(modifyY(_, y => y + 1))
-      | Down => scene->movePlayer(modifyY(_, y => y - 1))
-      | Left => scene->movePlayer(modifyX(_, x => x - 1))
-      | Right => scene->movePlayer(modifyX(_, x => x + 1))
+      | Direction(direction) => scene->movePlayer(direction)
       | Space => scene->revert
       }
     )
