@@ -25,20 +25,26 @@ let collidingBoulder = (scene, position) => {
   };
 };
 
+type boulderCollisionResult =
+  | BouldersShifted(scene)
+  | Blocked;
+
 let rec handleBoulderCollisions =
         (scene: scene, direction: direction, position: position)
-        : option(scene) => {
+        : boulderCollisionResult => {
   switch (scene->collidingBoulder(position)) {
-  | None => Some(scene)
+  | None => BouldersShifted(scene)
   | Some(collidingBoulder) =>
     let newBoulderPosition = direction->move(collidingBoulder);
     if (newBoulderPosition->collidesWithImmovable(scene)) {
-      None;
+      Blocked;
     } else {
       switch (scene->handleBoulderCollisions(direction, newBoulderPosition)) {
-      | None => None
-      | Some(newScene) =>
-        Some(newScene->replaceBoulder(collidingBoulder, newBoulderPosition))
+      | Blocked => Blocked
+      | BouldersShifted(newScene) =>
+        BouldersShifted(
+          newScene->replaceBoulder(collidingBoulder, newBoulderPosition),
+        )
       };
     };
   };
@@ -48,13 +54,13 @@ let revert = (scene: scene): scene =>
   switch (scene.history) {
   | [(direction, previous), ...rest] =>
     switch (scene->handleBoulderCollisions(direction, previous.player)) {
-    | Some(modifiedScene) => {
+    | BouldersShifted(modifiedScene) => {
         ...modifiedScene,
         movesLeft: scene.movesLeft + 1,
         revertible: previous,
         history: rest,
       }
-    | None => scene
+    | Blocked => scene
     }
   | [] => scene
   };
@@ -92,7 +98,7 @@ let movePlayer = (scene: scene, direction: direction) => {
     ->modifyMovesLeft(moves => moves - 1);
   } else {
     switch (scene->handleBoulderCollisions(direction, newPlayerPosition)) {
-    | Some(newScene) =>
+    | BouldersShifted(newScene) =>
       {
         ...newScene,
         revertible:
@@ -100,7 +106,7 @@ let movePlayer = (scene: scene, direction: direction) => {
       }
       ->pushHistory((direction->Key.revert, scene.revertible))
       ->modifyMovesLeft(moves => moves - 1)
-    | None => scene
+    | Blocked => scene
     };
   };
 };
