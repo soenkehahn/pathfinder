@@ -1,6 +1,7 @@
 open Scene_Core;
 open Belt;
 open List;
+open Key;
 
 exception ParseError(string);
 
@@ -16,6 +17,15 @@ let filter2d =
 let parseNumber = (cell): option(int) => {
   Js.String.split(" ", cell)->Array.get(1)->Option.map(int_of_string);
 };
+
+let parseSimple =
+    (grid: list(list((int, int, string))), name: string): list(position) =>
+  grid->filter2d(cell => cell == name)->map(((x, y, _cell)) => {x, y});
+
+let parseWithNumber = (grid, name): list((position, option(int))) =>
+  grid
+  ->filter2d(cell => Js.String.startsWith(name, cell))
+  ->map(((x, y, cell)) => ({x, y}, parseNumber(cell)));
 
 type parseResult = {
   initialMoves: int,
@@ -33,11 +43,10 @@ let parseGrid = (csv: string): parseResult => {
     withXs->mapWithIndex((rowIndex, row) =>
       row->map(((x, cell)) => (x, length(withXs) - 1 - rowIndex, cell))
     );
-  let players =
-    withCoordinates->filter2d(cell => Js.String.startsWith("Player", cell));
+  let players = withCoordinates->parseWithNumber("Player");
   let (player, initialMoves) =
     switch (players) {
-    | [(x, y, cell)] => ({x, y}, parseNumber(cell))
+    | [result] => result
     | [] => raise(ParseError("no player found"))
     | [_, ..._] => raise(ParseError("multiple players found"))
     };
@@ -49,51 +58,33 @@ let parseGrid = (csv: string): parseResult => {
 };
 
 let parseGoal = grid =>
-  switch (grid->filter2d(cell => cell == "Goal")) {
-  | [(x, y, _)] => {x, y}
+  switch (grid->parseSimple("Goal")) {
+  | [position] => position
   | [] => raise(ParseError("no goal found"))
   | [_, ..._] => raise(ParseError("multiple goals found"))
   };
 
 let parseMovesExtras = (grid): list(MovesExtra.t) =>
-  MovesExtra.(
-    grid
-    ->filter2d(cell => Js.String.startsWith("Moves", cell))
-    ->map(((x, y, cell)) =>
-        {
-          extraMoves: parseNumber(cell)->Option.getExn,
-          position: {
-            x,
-            y,
-          },
-        }
-      )
-  );
-
-let parseWalls = (grid: list(list((int, int, string)))): list(position) =>
-  grid->filter2d(cell => cell == "Wall")->map(((x, y, _cell)) => {x, y});
-
-let parseRocks = grid =>
   grid
-  ->filter2d(cell => cell == "Rock")
-  ->map(((x, y, _cell)) => Rock.initial({x, y}));
-
-let parseHammers = grid =>
-  grid->filter2d(cell => cell == "Hammer")->map(((x, y, _cell)) => {x, y});
+  ->parseWithNumber("Moves")
+  ->List.map(((position, moves)) =>
+      MovesExtra.{extraMoves: moves->Option.getExn, position}
+    );
 
 let parse = (csv: string): scene => {
   let {grid, initialMoves} = parseGrid(csv);
   {
     revertible: {
       player: Player.initial,
-      rocks: parseRocks(grid),
+      rocks: grid->parseSimple("Rock")->map(Rock.initial),
     },
     history: [],
     movesLeft: initialMoves,
     hasHammer: false,
     goal: parseGoal(grid),
     movesExtras: parseMovesExtras(grid),
-    walls: parseWalls(grid),
-    hammers: parseHammers(grid),
+    walls: grid->parseSimple("Wall"),
+    hammers: grid->parseSimple("Hammer"),
+    boulders: grid->parseSimple("Boulder"),
   };
 };

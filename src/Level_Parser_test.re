@@ -100,4 +100,11 @@ describe("parse", () => {
       expect(parse(csv).hammers) == [{x: 2, y: 0}];
     })
   });
+
+  describe("boulder parsing", () => {
+    test("it adds boulders to the level at the right position", () => {
+      let csv = "Player,Goal,Boulder";
+      expect(parse(csv).boulders) == [{x: 2, y: 0}];
+    })
+  });
 });
