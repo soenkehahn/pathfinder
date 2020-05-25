@@ -18,14 +18,21 @@ let getLevelNames = (): Js.Promise.t(array(string)) => {
   resolve(jsonToStringArray(json));
 };
 
-let getLevels = (): Js.Promise.t(list(scene)) => {
+let getLevels = (): Js.Promise.t(Result.t(list(scene), string)) => {
   let%P levelNames = getLevelNames();
   let%P csvs =
     levelNames
     ->Array.map(name => {
         let%P response = fetch(name);
-        response->Response.text;
+        let%P text = response->Response.text;
+        resolve((name, text));
       })
     ->all;
-  resolve(csvs->fromArray->map(parse));
+  resolve(
+    csvs
+    ->fromArray
+    ->ParseResult.mapM(((name, csv)) =>
+        parse(csv)->Level_Parser.ParseResult.localizeError(name)
+      ),
+  );
 };

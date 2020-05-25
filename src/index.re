@@ -98,7 +98,12 @@ module App = {
 
 let main = (): Js.Promise.t(unit) => {
   let%P levels = getLevels();
-  ReactDOMRe.renderToElementWithId(<App levels />, "main");
+  let app =
+    switch (levels) {
+    | Ok(levels) => <App levels />
+    | Error(message) => <> {React.string(message)} </>
+    };
+  ReactDOMRe.renderToElementWithId(app, "main");
   resolve();
 };
 
