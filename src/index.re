@@ -96,10 +96,20 @@ module App = {
   };
 };
 
-(
-  () => {
-    let%P levels = getLevels();
-    ReactDOMRe.renderToElementWithId(<App levels />, "main");
-    resolve();
-  }
-)();
+let main = (): Js.Promise.t(unit) => {
+  let%P levels = getLevels();
+  ReactDOMRe.renderToElementWithId(<App levels />, "main");
+  resolve();
+};
+
+try(
+  main()
+  |> catch((error: error) => {
+       Js.log(error);
+       resolve();
+     })
+) {
+| e =>
+  Js.log(Printexc.to_string(e));
+  resolve();
+};
