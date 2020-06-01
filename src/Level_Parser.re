@@ -91,7 +91,8 @@ let parseMovesExtras = (grid): list(MovesExtra.t) =>
 let parse = (csv: string): ParseResult.t(scene) => {
   let%ParseResult {grid, initialMoves} = parseGrid(csv);
   let%ParseResult goal = parseGoal(grid);
-  Ok({
+  let rec result = {
+    initialScene: () => result,
     revertible: {
       player: Player.initial,
       rocks: grid->parseSimple("Rock")->map(Rock.initial),
@@ -104,5 +105,6 @@ let parse = (csv: string): ParseResult.t(scene) => {
     walls: grid->parseSimple("Wall"),
     hammers: grid->parseSimple("Hammer"),
     boulders: grid->parseSimple("Boulder"),
-  });
+  };
+  Ok(result);
 };

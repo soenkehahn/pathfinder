@@ -102,7 +102,7 @@ let ui = (scene: scene) =>
        <>
          <br />
          {React.string(
-            "Use the arrow keys to move and space to revert moves.",
+            "Use the arrow keys to move and space to revert moves. Restart the level with Escape.",
           )}
        </>;
      }}

@@ -42,6 +42,7 @@ let modifyRocks =
 };
 
 type scene = {
+  initialScene: unit => scene,
   revertible,
   history: list((Key.direction, revertible)),
   movesLeft: int,

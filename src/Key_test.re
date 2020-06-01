@@ -17,6 +17,7 @@ describe("fromString", () => {
     ("ArrowLeft", Direction(Left)),
     ("ArrowRight", Direction(Right)),
     (" ", Space),
+    ("Escape", Escape),
   ];
   testAll("converts to key", table, ((js_key, key)) =>
     expect(fromString(js_key)) == Some(key)

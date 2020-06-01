@@ -411,3 +411,15 @@ describe("irrevertable boulders", () => {
     );
   });
 });
+
+describe("level restarting", () => {
+  test("allows to restart the level", () => {
+    let scene = testScene();
+    expect(scene->steps([direction(Up), Escape])) == scene;
+  });
+
+  test("restarting resets multiple steps", () => {
+    let scene = testScene();
+    expect(scene->steps([direction(Up), direction(Up), Escape])) == scene;
+  });
+});

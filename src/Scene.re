@@ -147,6 +147,7 @@ let step = (scene: scene, key: key): scene =>
       switch (key) {
       | Direction(direction) => scene->movePlayer(direction)
       | Space => scene->revert
+      | Escape => scene.initialScene()
       }
     )
     ->processExtras;

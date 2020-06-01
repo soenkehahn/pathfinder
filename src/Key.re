@@ -31,7 +31,8 @@ let revert = (direction: direction) =>
 
 type key =
   | Direction(direction)
-  | Space;
+  | Space
+  | Escape;
 
 let direction = x => Direction(x);
 
@@ -42,5 +43,6 @@ let fromString = (key: string): option(key) =>
   | "ArrowLeft" => Some(Direction(Left))
   | "ArrowRight" => Some(Direction(Right))
   | " " => Some(Space)
+  | "Escape" => Some(Escape)
   | _ => None
   };

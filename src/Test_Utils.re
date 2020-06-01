@@ -16,16 +16,20 @@ let testScene =
       (),
     )
     : scene => {
-  revertible: {
-    player: playerPosition,
-    rocks,
-  },
-  history,
-  movesLeft,
-  hasHammer,
-  goal,
-  movesExtras,
-  walls,
-  hammers,
-  boulders,
+  let rec result = {
+    initialScene: () => result,
+    revertible: {
+      player: playerPosition,
+      rocks,
+    },
+    history,
+    movesLeft,
+    hasHammer,
+    goal,
+    movesExtras,
+    walls,
+    hammers,
+    boulders,
+  };
+  result;
 };
