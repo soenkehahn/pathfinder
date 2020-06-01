@@ -119,8 +119,4 @@ module App = {
   };
 };
 
-let main = () => ReactDOMRe.renderToElementWithId(<App />, "main");
-
-try(main()) {
-| e => Js.log(Printexc.to_string(e))
-};
+ReactDOMRe.renderToElementWithId(<App />, "main");
