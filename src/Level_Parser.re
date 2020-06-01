@@ -11,14 +11,7 @@ module ParseResult = {
   let rec mapM = (list: list('a), f: 'a => t('b)): t(list('b)) =>
     switch (list) {
     | [a, ...r] =>
-      switch (f(a)) {
-      | Ok(b) =>
-        switch (mapM(r, f)) {
-        | Ok(r) => Ok([b, ...r])
-        | Error(message) => Error(message)
-        }
-      | Error(message) => Error(message)
-      }
+      f(a)->Result.flatMap(b => mapM(r, f)->Result.map(r => [b, ...r]))
     | [] => Ok([])
     };
 
