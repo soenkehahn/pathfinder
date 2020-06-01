@@ -18,7 +18,7 @@ let getLevelNames = (): Js.Promise.t(array(string)) => {
   resolve(jsonToStringArray(json));
 };
 
-let getLevels = (): Js.Promise.t(Result.t(list(scene), string)) => {
+let getLevels = (): Js.Promise.t(ParseResult.t(list(scene))) => {
   let%P levelNames = getLevelNames();
   let%P csvs =
     levelNames

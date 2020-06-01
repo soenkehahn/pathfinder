@@ -4,11 +4,11 @@ open List;
 open Key;
 
 module ParseResult = {
+  type t('a) = Result.t('a, string);
+
   let let_ = Result.flatMap;
 
-  let rec mapM =
-          (list: list('a), f: 'a => Result.t('b, 'error))
-          : Result.t(list('b), 'error) =>
+  let rec mapM = (list: list('a), f: 'a => t('b)): t(list('b)) =>
     switch (list) {
     | [a, ...r] =>
       switch (f(a)) {
@@ -22,8 +22,7 @@ module ParseResult = {
     | [] => Ok([])
     };
 
-  let localizeError =
-      (result: Result.t('a, string), location: string): Result.t('a, string) =>
+  let localizeError = (result: t('a), location: string): t('a) =>
     switch (result) {
     | Ok(a) => Ok(a)
     | Error(message) => Error(location ++ ": " ++ message)
@@ -57,7 +56,7 @@ type grid = {
   grid: list(list((int, int, string))),
 };
 
-let parseGrid = (csv: string): Result.t(grid, string) => {
+let parseGrid = (csv: string): ParseResult.t(grid) => {
   let cells: list(list(string)) =
     Js.String.(
       split("\n", csv)->fromArray->map(row => split(",", row)->fromArray)
@@ -96,7 +95,7 @@ let parseMovesExtras = (grid): list(MovesExtra.t) =>
       MovesExtra.{extraMoves: moves->Option.getExn, position}
     );
 
-let parse = (csv: string): Result.t(scene, string) => {
+let parse = (csv: string): ParseResult.t(scene) => {
   let%ParseResult {grid, initialMoves} = parseGrid(csv);
   let%ParseResult goal = parseGoal(grid);
   Ok({
