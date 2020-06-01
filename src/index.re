@@ -31,7 +31,7 @@ let centerStyle =
     (),
   );
 
-module DrawGame = {
+module RenderGame = {
   [@react.component]
   let make = (~game: Game.t) => {
     open React;
@@ -59,13 +59,10 @@ module DrawGame = {
   };
 };
 
-module App = {
+module ManageGame = {
   [@react.component]
-  let make = (~levels: list(Scene_Core.scene)) => {
-    let url = ReasonReactRouter.useUrl();
-    let (game, setGame) =
-      React.useState(() => Game.make(Game.dropLevels(url.hash, levels)));
-
+  let make = (~game: Game.t) => {
+    let (game, setGame) = React.useState(() => game);
     let handleKeyboardEvents = (event): unit => {
       Webapi.Dom.KeyboardEvent.(
         if (!repeat(event)) {
@@ -92,14 +89,34 @@ module App = {
         },
       );
     });
-    <DrawGame game />;
+    <RenderGame game />;
   };
 };
 
-(
-  () => {
-    let%P levels = getLevels();
-    ReactDOMRe.renderToElementWithId(<App levels />, "main");
-    resolve();
-  }
-)();
+module App = {
+  [@react.component]
+  let make = () => {
+    let url = ReasonReactRouter.useUrl();
+    let (game, setGame) = React.useState(() => None);
+    React.useEffect0(() => {
+      {
+        let%P levels = getLevels();
+        switch (levels) {
+        | Ok(levels) =>
+          setGame(_ => Some(Game.make(Game.dropLevels(url.hash, levels))))
+        | Error(message) => setGame(_ => Some(Error(message)))
+        };
+        resolve();
+      }
+      ->ignore;
+      None;
+    });
+    switch (game) {
+    | None => React.null
+    | Some(Ok(game)) => <ManageGame game />
+    | Some(Error(message)) => React.string(message)
+    };
+  };
+};
+
+ReactDOMRe.renderToElementWithId(<App />, "main");

@@ -11,10 +11,8 @@ type t = {
 
 let make = (levels: list(scene)) =>
   switch (levels) {
-  | [current, ...rest] => {scene: current, levels: rest}
-  | [] =>
-    exception NoLevels;
-    raise(NoLevels);
+  | [current, ...rest] => Ok({scene: current, levels: rest})
+  | [] => Error("no levels left")
   };
 
 let dropLevels = (level: string, levels: list(scene)): list(scene) =>

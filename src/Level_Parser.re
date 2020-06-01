@@ -3,7 +3,24 @@ open Belt;
 open List;
 open Key;
 
-exception ParseError(string);
+module ParseResult = {
+  type t('a) = Result.t('a, string);
+
+  let let_ = Result.flatMap;
+
+  let rec mapM = (list: list('a), f: 'a => t('b)): t(list('b)) =>
+    switch (list) {
+    | [a, ...r] =>
+      f(a)->Result.flatMap(b => mapM(r, f)->Result.map(r => [b, ...r]))
+    | [] => Ok([])
+    };
+
+  let localizeError = (result: t('a), location: string): t('a) =>
+    switch (result) {
+    | Ok(a) => Ok(a)
+    | Error(message) => Error(location ++ ": " ++ message)
+    };
+};
 
 let map2d = (grid: list(list('a)), f: 'a => 'b): list(list('b)) => {
   grid->map(row => row->map(f));
@@ -27,12 +44,12 @@ let parseWithNumber = (grid, name): list((position, option(int))) =>
   ->filter2d(cell => Js.String.startsWith(name, cell))
   ->map(((x, y, cell)) => ({x, y}, parseNumber(cell)));
 
-type parseResult = {
+type grid = {
   initialMoves: int,
   grid: list(list((int, int, string))),
 };
 
-let parseGrid = (csv: string): parseResult => {
+let parseGrid = (csv: string): ParseResult.t(grid) => {
   let cells: list(list(string)) =
     Js.String.(
       split("\n", csv)->fromArray->map(row => split(",", row)->fromArray)
@@ -44,24 +61,24 @@ let parseGrid = (csv: string): parseResult => {
       row->map(((x, cell)) => (x, length(withXs) - 1 - rowIndex, cell))
     );
   let players = withCoordinates->parseWithNumber("Player");
-  let (player, initialMoves) =
+  let%ParseResult (player, initialMoves) =
     switch (players) {
-    | [result] => result
-    | [] => raise(ParseError("no player found"))
-    | [_, ..._] => raise(ParseError("multiple players found"))
+    | [result] => Ok(result)
+    | [] => Error("no player found")
+    | [_, ..._] => Error("multiple players found")
     };
   let grid =
     withCoordinates->map2d(((x, y, cell)) =>
       (x - player.x, y - player.y, cell)
     );
-  {grid, initialMoves: initialMoves->Option.getWithDefault(3)};
+  Ok({grid, initialMoves: initialMoves->Option.getWithDefault(3)});
 };
 
 let parseGoal = grid =>
   switch (grid->parseSimple("Goal")) {
-  | [position] => position
-  | [] => raise(ParseError("no goal found"))
-  | [_, ..._] => raise(ParseError("multiple goals found"))
+  | [position] => Ok(position)
+  | [] => Error("no goal found")
+  | [_, ..._] => Error("multiple goals found")
   };
 
 let parseMovesExtras = (grid): list(MovesExtra.t) =>
@@ -71,9 +88,10 @@ let parseMovesExtras = (grid): list(MovesExtra.t) =>
       MovesExtra.{extraMoves: moves->Option.getExn, position}
     );
 
-let parse = (csv: string): scene => {
-  let {grid, initialMoves} = parseGrid(csv);
-  {
+let parse = (csv: string): ParseResult.t(scene) => {
+  let%ParseResult {grid, initialMoves} = parseGrid(csv);
+  let%ParseResult goal = parseGoal(grid);
+  Ok({
     revertible: {
       player: Player.initial,
       rocks: grid->parseSimple("Rock")->map(Rock.initial),
@@ -81,10 +99,10 @@ let parse = (csv: string): scene => {
     history: [],
     movesLeft: initialMoves,
     hasHammer: false,
-    goal: parseGoal(grid),
+    goal,
     movesExtras: parseMovesExtras(grid),
     walls: grid->parseSimple("Wall"),
     hammers: grid->parseSimple("Hammer"),
     boulders: grid->parseSimple("Boulder"),
-  };
+  });
 };
